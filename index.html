@@ -337,3 +337,63 @@
     </script>
 </body>
 </html>
+
+
+// Google Apps Script 後端程式碼
+
+function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Data");
+  
+  // 解析傳入的 JSON 數據
+  var data = JSON.parse(e.postData.contents);
+  
+  // 準備儲存的時間戳記
+  var timestamp = new Date();
+  
+  // 這裡我們簡單地將整份 JSON 存入單一儲存格，方便擴充
+  // 如果舊資料存在則更新，不存在則新增
+  var lastRow = sheet.getLastRow();
+  var found = false;
+  
+  if (lastRow > 1) {
+    var range = sheet.getRange(2, 1, lastRow - 1, 1);
+    var values = range.getValues();
+    for (var i = 0; i < values.length; i++) {
+      if (values[i][0] == "CURRENT_CONFIG") {
+        sheet.getRange(i + 2, 2).setValue(timestamp);
+        sheet.getRange(i + 2, 3).setValue(JSON.stringify(data));
+        found = true;
+        break;
+      }
+    }
+  }
+  
+  if (!found) {
+    sheet.appendRow(["CURRENT_CONFIG", timestamp, JSON.stringify(data)]);
+  }
+  
+  return ContentService.createTextOutput("Success").setMimeType(ContentService.MimeType.TEXT);
+}
+
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Data");
+  var lastRow = sheet.getLastRow();
+  
+  var result = {};
+  
+  if (lastRow > 1) {
+    var range = sheet.getRange(2, 1, lastRow - 1, 3);
+    var values = range.getValues();
+    for (var i = 0; i < values.length; i++) {
+      if (values[i][0] == "CURRENT_CONFIG") {
+        result = JSON.parse(values[i][2]);
+        break;
+      }
+    }
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
