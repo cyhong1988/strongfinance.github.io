@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人資產管理系統</title>
+    <title>個人投資戰略系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
@@ -51,7 +51,7 @@
     <div class="max-w-7xl mx-auto">
         <header class="flex flex-col md:flex-row justify-between items-center mb-12 border-b border-white/10 pb-10 gap-8">
             <div class="flex-1 text-center md:text-left">
-                <h1 class="text-2xl font-light tracking-[0.3em] text-white">個人資產管理系統</h1>
+                <h1 class="text-2xl font-light tracking-[0.3em] text-white">個人投資戰略系統</h1>
                 <div class="flex items-center justify-center md:justify-start gap-2 mt-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <p id="sync-status" class="text-slate-500 text-[10px] tracking-widest uppercase font-semibold">系統連線中</p>
@@ -72,6 +72,7 @@
                     <span class="text-sm text-slate-400 font-mono">TWD</span>
                     <div id="total-assets-display" class="text-4xl font-mono font-bold text-white tracking-tighter">--</div>
                 </div>
+                <br>
                 <button onclick="saveData()" class="btn-save uppercase">儲存並同步</button>
             </div>
         </header>
