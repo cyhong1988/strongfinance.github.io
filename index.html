@@ -201,7 +201,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="card p-6 rounded-2xl border border-white/5 text-center">
-                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">現金尚可存活</h3>
+                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">現金尚可支撐年限</h3>
                         <div id="survival-result" class="text-3xl font-mono font-light text-white">--</div>
                     </div>
                     <div class="card p-6 rounded-2xl border border-white/5 text-center">
@@ -322,8 +322,8 @@
                 
                 let timeStr = "";
                 if (years > 0) timeStr += `${years}年`;
-                if (remainingMonths > 0) timeStr += `${remainingMonths}月`;
-                timeStr += `${remainingDays}天`;
+                if (remainingMonths > 0) timeStr += `${remainingMonths}個月`;
+                timeStr += `又${remainingDays}天`;
                 
                 document.getElementById('survival-result').innerText = timeStr;
                 document.getElementById('survival-result').classList.remove('text-emerald-400');
