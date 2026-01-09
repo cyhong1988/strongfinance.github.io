@@ -84,28 +84,39 @@
                         <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">現金流清單</h2>
                         <button onclick="addRow('expense')" class="text-[10px] text-slate-500 hover:text-white transition">+ 新增項目</button>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-[10px] text-slate-500 mb-1 uppercase tracking-wider">每月固定收入</label>
-                        <input type="number" id="input-income" class="input-field border-emerald-900/30 font-mono text-emerald-400" value="146000" oninput="calculate()">
+                    <div class="space-y-3 mb-6">
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1 uppercase tracking-wider">每月固定收入</label>
+                            <input type="number" id="input-income" class="input-field border-emerald-900/30 font-mono text-emerald-400" value="146000" oninput="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1 uppercase tracking-wider">每月固定支出 (自動加總)</label>
+                            <input type="text" id="display-total-expense" class="input-field input-readonly font-mono text-red-400/80" value="0" readonly>
+                        </div>
                     </div>
+                    
                     <div id="expense-list" class="space-y-2 min-h-[50px]"></div>
+                    
                     <div class="mt-8 pt-4 border-t border-white/5">
                         <div class="flex justify-between items-end">
                             <div>
-                                <span class="text-slate-500 text-[10px] uppercase tracking-wider">每月收支缺口</span>
-                                <div id="monthly-gap-display" class="text-2xl font-mono font-bold text-red-400/80">--</div>
+                                <span class="text-slate-500 text-[10px] uppercase tracking-wider">每月收支報告</span>
+                                <div id="monthly-gap-display" class="text-2xl font-mono font-bold">--</div>
                             </div>
                             <div class="text-right">
-                                <span class="text-slate-500 text-[10px] uppercase tracking-wider">總預算</span>
-                                <div id="total-expense-display" class="text-xs font-mono text-slate-400">--</div>
+                                <span class="text-slate-500 text-[10px] uppercase tracking-wider">年度固定支出預算</span>
+                                <div id="annual-expense-display" class="text-xs font-mono text-slate-400">--</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card p-6 rounded-2xl border-t-2 border-emerald-500/50">
-                    <h2 class="text-xs font-bold text-slate-400 tracking-widest mb-4 uppercase">年度大型預留支出(出國旅遊)</h2>
-                    <input type="number" id="input-travel" class="input-field font-mono text-lg" value="400000" oninput="calculate()">
+                <div class="card p-6 rounded-2xl border-t-2 border-slate-500/50">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">目前出國旅遊支出</h2>
+                        <span class="text-[9px] text-slate-500 uppercase tracking-tighter">僅紀錄</span>
+                    </div>
+                    <input type="number" id="input-travel" class="input-field font-mono text-lg text-slate-400" value="400000" oninput="calculate()">
                 </div>
             </div>
 
@@ -117,9 +128,7 @@
                             <button onclick="addRow('bank')" class="text-[9px] bg-white/5 px-2 py-1 rounded hover:bg-white/10">+ 新增銀行</button>
                         </div>
                         <input type="text" id="input-cash" class="input-field input-readonly text-2xl font-mono text-emerald-400/90 mb-4" value="0" readonly>
-                        
-                        <div id="bank-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                            </div>
+                        <div id="bank-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
                     </div>
 
                     <div class="card p-6 rounded-2xl flex flex-col justify-between">
@@ -247,29 +256,25 @@
             const container = document.getElementById(type === 'bank' ? 'bank-list' : 'expense-list');
             const row = document.createElement('div');
             row.className = `flex gap-2 items-center ${type}-row bg-white/5 p-2 rounded-lg mb-1`;
-            
             const nameClass = type === 'bank' ? 'bank-name' : 'exp-name';
             const amountClass = type === 'bank' ? 'bank-amount' : 'exp-amount';
-            
             row.innerHTML = `
                 <div class="drag-handle text-slate-600">⋮</div>
-                <input type="text" class="input-field ${nameClass} text-xs" value="${name}" placeholder="${type === 'bank' ? '銀行名稱' : '支出項目'}">
+                <input type="text" class="input-field ${nameClass} text-xs" value="${name}" placeholder="${type === 'bank' ? '銀行名稱' : '項目'}">
                 <input type="number" class="input-field ${amountClass} w-24 font-mono text-right text-xs" value="${amount}" oninput="calculate()">
-                <span class="btn-delete" onclick="this.parentElement.remove(); calculate();">✕</span>
-            `;
+                <span class="btn-delete" onclick="this.parentElement.remove(); calculate();">✕</span>`;
             container.appendChild(row);
             calculate();
         }
 
         function calculate() {
-            // 1. 先計算銀行總額並更新流動現金輸入框
+            // 銀行加總
             let totalBankCash = 0;
             document.querySelectorAll('.bank-amount').forEach(i => totalBankCash += parseFloat(i.value) || 0);
             document.getElementById('input-cash').value = Math.floor(totalBankCash).toLocaleString();
 
             const income = parseFloat(document.getElementById('input-income').value) || 0;
-            const cash = totalBankCash; // 使用自動加總的值
-            const travel = parseFloat(document.getElementById('input-travel').value) || 0;
+            const cash = totalBankCash;
             const us1x = parseFloat(document.getElementById('input-us-1x').value) || 0;
             const usNx = parseFloat(document.getElementById('input-us-nx').value) || 0;
             const tw = parseFloat(document.getElementById('input-tw').value) || 0;
@@ -277,36 +282,58 @@
             const pnlTw = parseFloat(document.getElementById('pnl-tw').value) || 0;
 
             const pnlUsTwd = pnlUsUsd * currentFxRate;
-            const usTwdDisplay = document.getElementById('pnl-us-twd-display');
-            usTwdDisplay.innerText = Math.floor(pnlUsTwd).toLocaleString();
-            usTwdDisplay.className = `text-md font-mono mt-1 font-bold ${pnlUsUsd >= 0 ? 'profit' : 'loss'}`;
-            document.getElementById('pnl-tw').className = `input-field w-32 font-mono text-right text-sm ${pnlTw >= 0 ? 'profit' : 'loss'}`;
+            document.getElementById('pnl-us-twd-display').innerText = Math.floor(pnlUsTwd).toLocaleString();
+            document.getElementById('pnl-us-twd-display').className = `text-md font-mono mt-1 font-bold ${pnlUsUsd >= 0 ? 'profit' : 'loss'}`;
 
             const totalAssets = cash + tw + us1x + usNx + pnlUsTwd + pnlTw;
             document.getElementById('total-assets-display').innerText = Math.floor(totalAssets).toLocaleString();
 
+            // --- 重新定義的支出與缺口計算邏輯 ---
             let totalExp = 0;
             document.querySelectorAll('.exp-amount').forEach(i => totalExp += parseFloat(i.value) || 0);
-            const gap = totalExp - income;
-            document.getElementById('total-expense-display').innerText = totalExp.toLocaleString();
-            document.getElementById('monthly-gap-display').innerText = gap.toLocaleString();
+            document.getElementById('display-total-expense').value = totalExp.toLocaleString();
+            
+            // 計算差額 (收入 - 支出)
+            const balance = income - totalExp;
+            const gapDisplay = document.getElementById('monthly-gap-display');
+            
+            if (balance > 0) {
+                // 有結餘：收入大於支出，顯示正號與綠色
+                gapDisplay.innerText = "+" + balance.toLocaleString();
+                gapDisplay.className = "text-2xl font-mono font-bold profit"; 
+            } else if (balance < 0) {
+                // 有缺口：支出大於收入，顯示負號與紅色
+                gapDisplay.innerText = "-" + Math.abs(balance).toLocaleString();
+                gapDisplay.className = "text-2xl font-mono font-bold loss";
+            } else {
+                // 平衡
+                gapDisplay.innerText = "0";
+                gapDisplay.className = "text-2xl font-mono font-bold text-slate-400";
+            }
+            // --------------------------------
 
-            const annualDrain = (gap * 12) + travel;
+            document.getElementById('annual-expense-display').innerText = (totalExp * 12).toLocaleString();
+
+            // 生存年限計算 (用缺口計算，若無缺口則顯示無限)
+            const gap = totalExp - income;
+            const annualDrain = gap * 12; 
             document.getElementById('survival-result').innerText = (annualDrain > 0 ? (cash / annualDrain).toFixed(2) : "∞") + " 年";
 
+            // 進度預估
             const twWeeks = Math.max(0, Math.ceil((5000000 - tw) / 50000));
             document.getElementById('tw-time-result').innerText = formatTime(twWeeks);
-            document.getElementById('tw-time-tag').innerText = "預計完工: " + formatTime(twWeeks);
+            document.getElementById('tw-time-tag').innerText = "預計建倉完成時間: " + formatTime(twWeeks);
             document.getElementById('bar-tw').style.width = Math.min((tw / 5000000) * 100, 100) + "%";
 
             const u1W = Math.max(0, Math.ceil((2000000 - us1x) / 50000));
             const uNW = Math.max(0, Math.ceil((500000 - usNx) / 25000));
             const usMaxW = Math.max(u1W, uNW);
             document.getElementById('us-time-result').innerText = formatTime(usMaxW);
-            document.getElementById('us-time-tag').innerText = "預計完工: " + formatTime(usMaxW);
+            document.getElementById('us-time-tag').innerText = "預計建倉完成時間: " + formatTime(usMaxW);
             document.getElementById('bar-us-1x').style.width = Math.min((us1x / 2500000) * 100, 80) + "%";
             document.getElementById('bar-us-nx').style.width = Math.min((usNx / 2500000) * 100, 20) + "%";
         }
+
 
         async function saveData() {
             const status = document.getElementById('sync-status');
@@ -349,15 +376,12 @@
                     document.getElementById('input-tw').value = data.tw;
                     document.getElementById('pnl-us-usd').value = data.pnlUsUsd || 0;
                     document.getElementById('pnl-tw').value = data.pnlTw || 0;
-                    
                     document.getElementById('bank-list').innerHTML = '';
                     if (data.banks && data.banks.length > 0) {
                         data.banks.forEach(b => addRow('bank', b.name, b.amount));
                     } else {
-                        // 初始預設銀行
                         ['中信','樂天','王道','上海商銀','台新'].forEach(n => addRow('bank', n, '0'));
                     }
-
                     document.getElementById('expense-list').innerHTML = '';
                     if (data.expenses) {
                         data.expenses.forEach(ex => addRow('expense', ex.name, ex.amount));
@@ -365,7 +389,6 @@
                     calculate();
                 }
             } catch (e) { 
-                // 讀取失敗時的預設值
                 ['中信','樂天','王道','上海商銀','台新'].forEach(n => addRow('bank', n, '0'));
                 addRow('expense', '房貸', 100000); 
                 addRow('expense', '生活費', 40000); 
