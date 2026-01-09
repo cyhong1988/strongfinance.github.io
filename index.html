@@ -10,10 +10,10 @@
         .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
         .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .input-field { background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: white; padding: 6px 10px; border-radius: 6px; width: 100%; font-size: 0.875rem; }
+        .input-readonly { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(51, 65, 85, 0.3); color: #94a3b8; cursor: not-allowed; }
         .btn-delete { color: #ef4444; cursor: pointer; transition: opacity 0.2s; padding: 0 8px; }
         .drag-handle { cursor: grab; color: #475569; font-size: 1.2rem; user-select: none; padding-right: 8px; }
         
-        /* 寬鬆版儲存按鈕 */
         .btn-save { 
             background: rgba(59, 130, 246, 0.05);
             border: 1px solid rgba(59, 130, 246, 0.4); 
@@ -50,7 +50,6 @@
 
     <div class="max-w-7xl mx-auto">
         <header class="flex flex-col md:flex-row justify-between items-center mb-12 border-b border-white/10 pb-10 gap-8">
-            
             <div class="flex-1 text-center md:text-left">
                 <h1 class="text-2xl font-light tracking-[0.3em] text-white">個人資產管理系統</h1>
                 <div class="flex items-center justify-center md:justify-start gap-2 mt-2">
@@ -83,7 +82,7 @@
                 <div class="card p-6 rounded-2xl border-t-2 border-red-500/50 shadow-xl">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">現金流清單</h2>
-                        <button onclick="addRow()" class="text-[10px] text-slate-500 hover:text-white transition">+ 新增項目</button>
+                        <button onclick="addRow('expense')" class="text-[10px] text-slate-500 hover:text-white transition">+ 新增項目</button>
                     </div>
                     <div class="mb-4">
                         <label class="block text-[10px] text-slate-500 mb-1 uppercase tracking-wider">每月固定收入</label>
@@ -111,20 +110,29 @@
             </div>
 
             <div class="lg:col-span-2 space-y-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="card p-5 rounded-2xl">
-                        <label class="text-[10px] text-slate-500 uppercase tracking-widest block mb-2 font-bold">流動現金總額</label>
-                        <input type="number" id="input-cash" class="input-field text-xl font-mono text-emerald-400/90" value="4600000" oninput="calculate()">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card p-6 rounded-2xl">
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">流動現金總額 (自動加總)</label>
+                            <button onclick="addRow('bank')" class="text-[9px] bg-white/5 px-2 py-1 rounded hover:bg-white/10">+ 新增銀行</button>
+                        </div>
+                        <input type="text" id="input-cash" class="input-field input-readonly text-2xl font-mono text-emerald-400/90 mb-4" value="0" readonly>
+                        
+                        <div id="bank-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                            </div>
                     </div>
-                    <div class="card p-5 rounded-2xl">
-                        <label class="text-[10px] text-slate-500 uppercase tracking-widest block mb-2 font-bold">尚餘加碼彈藥</label>
-                        <input type="number" id="input-ammo" class="input-field text-xl font-mono text-amber-400/90" value="1000000" oninput="calculate()">
+
+                    <div class="card p-6 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <label class="text-[10px] text-slate-500 uppercase tracking-widest block mb-2 font-bold">尚餘加碼彈藥</label>
+                            <input type="number" id="input-ammo" class="input-field text-xl font-mono text-amber-400/90" value="1000000" oninput="calculate()">
+                        </div>
+                        <p class="text-[9px] text-slate-500 italic mt-4">此欄位手動填寫，不計入上方自動加總。</p>
                     </div>
                 </div>
 
                 <div class="card p-8 rounded-2xl shadow-2xl">
                     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-10">資產建倉進度與實時損益</h2>
-                    
                     <div class="space-y-14">
                         <div class="space-y-4">
                             <div class="flex justify-between items-end border-b border-white/5 pb-3">
@@ -188,11 +196,11 @@
                         <div id="survival-result" class="text-3xl font-mono font-light text-white">--</div>
                     </div>
                     <div class="card p-6 rounded-2xl border border-white/5 text-center">
-                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">台股預計完成建倉進度</h3>
+                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">台股建倉完成預估</h3>
                         <div id="tw-time-result" class="text-xl font-mono text-slate-300">--</div>
                     </div>
                     <div class="card p-6 rounded-2xl border border-white/5 text-center">
-                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">美股預計完成建倉進度</h3>
+                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">美股建倉完成預估</h3>
                         <div id="us-time-result" class="text-xl font-mono text-cyan-500/80">--</div>
                     </div>
                 </div>
@@ -219,8 +227,7 @@
         }
 
         function initSortable() {
-            const el = document.getElementById('expense-list');
-            Sortable.create(el, { animation: 150, handle: '.drag-handle', onEnd: () => calculate() });
+            Sortable.create(document.getElementById('expense-list'), { animation: 150, handle: '.drag-handle', onEnd: () => calculate() });
         }
 
         function quickAdd(id, amount) {
@@ -236,18 +243,32 @@
             return (months > 0 ? `${months}個月 ` : "") + (weeks > 0 ? `${weeks}週` : "");
         }
 
-        function addRow(name = '', amount = '') {
-            const container = document.getElementById('expense-list');
+        function addRow(type, name = '', amount = '') {
+            const container = document.getElementById(type === 'bank' ? 'bank-list' : 'expense-list');
             const row = document.createElement('div');
-            row.className = 'flex gap-2 items-center expense-row bg-white/5 p-2 rounded-lg';
-            row.innerHTML = `<div class="drag-handle text-slate-600">⋮</div><input type="text" class="input-field exp-name text-xs" value="${name}"><input type="number" class="input-field exp-amount w-20 font-mono text-right text-xs" value="${amount}" oninput="calculate()"><span class="btn-delete" onclick="this.parentElement.remove(); calculate();">✕</span>`;
+            row.className = `flex gap-2 items-center ${type}-row bg-white/5 p-2 rounded-lg mb-1`;
+            
+            const nameClass = type === 'bank' ? 'bank-name' : 'exp-name';
+            const amountClass = type === 'bank' ? 'bank-amount' : 'exp-amount';
+            
+            row.innerHTML = `
+                <div class="drag-handle text-slate-600">⋮</div>
+                <input type="text" class="input-field ${nameClass} text-xs" value="${name}" placeholder="${type === 'bank' ? '銀行名稱' : '支出項目'}">
+                <input type="number" class="input-field ${amountClass} w-24 font-mono text-right text-xs" value="${amount}" oninput="calculate()">
+                <span class="btn-delete" onclick="this.parentElement.remove(); calculate();">✕</span>
+            `;
             container.appendChild(row);
             calculate();
         }
 
         function calculate() {
+            // 1. 先計算銀行總額並更新流動現金輸入框
+            let totalBankCash = 0;
+            document.querySelectorAll('.bank-amount').forEach(i => totalBankCash += parseFloat(i.value) || 0);
+            document.getElementById('input-cash').value = Math.floor(totalBankCash).toLocaleString();
+
             const income = parseFloat(document.getElementById('input-income').value) || 0;
-            const cash = parseFloat(document.getElementById('input-cash').value) || 0;
+            const cash = totalBankCash; // 使用自動加總的值
             const travel = parseFloat(document.getElementById('input-travel').value) || 0;
             const us1x = parseFloat(document.getElementById('input-us-1x').value) || 0;
             const usNx = parseFloat(document.getElementById('input-us-nx').value) || 0;
@@ -292,7 +313,6 @@
             status.innerText = "正在儲存...";
             const data = {
                 income: document.getElementById('input-income').value,
-                cash: document.getElementById('input-cash').value,
                 ammo: document.getElementById('input-ammo').value,
                 travel: document.getElementById('input-travel').value,
                 us1x: document.getElementById('input-us-1x').value,
@@ -300,6 +320,10 @@
                 tw: document.getElementById('input-tw').value,
                 pnlUsUsd: document.getElementById('pnl-us-usd').value,
                 pnlTw: document.getElementById('pnl-tw').value,
+                banks: Array.from(document.querySelectorAll('.bank-row')).map(r => ({
+                    name: r.querySelector('.bank-name').value,
+                    amount: r.querySelector('.bank-amount').value
+                })),
                 expenses: Array.from(document.querySelectorAll('.expense-row')).map(r => ({
                     name: r.querySelector('.exp-name').value,
                     amount: r.querySelector('.exp-amount').value
@@ -316,9 +340,8 @@
             try {
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
-                if (data.income) {
+                if (data.income !== undefined) {
                     document.getElementById('input-income').value = data.income;
-                    document.getElementById('input-cash').value = data.cash;
                     document.getElementById('input-ammo').value = data.ammo;
                     document.getElementById('input-travel').value = data.travel;
                     document.getElementById('input-us-1x').value = data.us1x || 0;
@@ -326,11 +349,27 @@
                     document.getElementById('input-tw').value = data.tw;
                     document.getElementById('pnl-us-usd').value = data.pnlUsUsd || 0;
                     document.getElementById('pnl-tw').value = data.pnlTw || 0;
+                    
+                    document.getElementById('bank-list').innerHTML = '';
+                    if (data.banks && data.banks.length > 0) {
+                        data.banks.forEach(b => addRow('bank', b.name, b.amount));
+                    } else {
+                        // 初始預設銀行
+                        ['中信','樂天','王道','上海商銀','台新'].forEach(n => addRow('bank', n, '0'));
+                    }
+
                     document.getElementById('expense-list').innerHTML = '';
-                    data.expenses.forEach(ex => addRow(ex.name, ex.amount));
+                    if (data.expenses) {
+                        data.expenses.forEach(ex => addRow('expense', ex.name, ex.amount));
+                    }
                     calculate();
                 }
-            } catch (e) { addRow('房貸', 100000); addRow('生活費', 40000); }
+            } catch (e) { 
+                // 讀取失敗時的預設值
+                ['中信','樂天','王道','上海商銀','台新'].forEach(n => addRow('bank', n, '0'));
+                addRow('expense', '房貸', 100000); 
+                addRow('expense', '生活費', 40000); 
+            }
         }
 
         window.onload = () => { fetchFxRate(); loadData(); initSortable(); };
