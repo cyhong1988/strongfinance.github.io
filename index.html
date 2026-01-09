@@ -1,1 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>財務戰略管理系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .input-field { background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: white; padding: 6px 10px; border-radius: 6px; width: 100%; font-size: 0.875rem; }
+        .btn-delete { color: #ef4444; cursor: pointer; transition: opacity 0.2s; padding: 0 8px; }
+        
+        /* 修復後的拖曳把手樣式 */
+        .drag-handle { cursor: grab; color: #475569; font-size: 1.2rem; user-select: none; padding-right: 8px; }
+        .drag-handle:active { cursor: grabbing; }
+        .sortable-ghost { opacity: 0.3; background: #3b82f6; border-radius: 8px; }
+
+        .btn-save { 
+            border: 1px solid rgba(59, 130, 246, 0.5); 
+            color: #60a5fa; 
+            padding: 4px 14px; 
+            border-radius: 8px; 
+            font-size: 0.75rem; 
+            transition: all 0.3s; 
+        }
+        .btn-save:hover { 
+            background: rgba(59, 130, 246, 0.1); 
+            border-color: #60a5fa; 
+        }
+
+        .btn-quick-add { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; transition: all 0.2s; margin-top: 6px; }
+        .btn-quick-add:hover { background: rgba(59, 130, 246, 0.2); color: white; }
+    </style>
+</head>
+<body class="gradient-bg text-slate-200 min-h-screen p-4 md:p-8 font-sans">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-10 border-b border-white/5 pb-4">
+            <div>
+                <h1 class="text-2xl font-light tracking-widest text-white">財務戰略管理系統 <span class="text-blue-500 font-bold ml-1">STRATEGIC</span></h1>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <p id="sync-status" class="text-slate-500 text-[10px] tracking-widest uppercase">系統監控中</p>
+                </div>
+            </div>
+            <button onclick="saveData()" class="btn-save font-medium">儲存至雲端</button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="space-y-6">
+                <div class="card p-6 rounded-2xl border-t-2 border-red-500/50 shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-bold text-slate-400 tracking-widest">現金流出清單</h2>
+                        <button onclick="addRow()" class="text-[10px] text-slate-500 hover:text-white transition">+ 新增項目</button>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-[10px] text-slate-500 mb-1 uppercase">每月固定收入</label>
+                        <input type="number" id="input-income" class="input-field border-emerald-900/30 font-mono text-emerald-400" value="146000" oninput="calculate()">
+                    </div>
+                    
+                    <div id="expense-list" class="space-y-2 min-h-[50px]"></div>
+
+                    <div class="mt-8 pt-4 border-t border-white/5">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <span class="text-slate-500 text-[10px] uppercase">每月收支缺口</span>
+                                <div id="monthly-gap-display" class="text-2xl font-mono font-bold text-red-400/80">--</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-slate-500 text-[10px] uppercase">總支出預算</span>
+                                <div id="total-expense-display" class="text-xs font-mono text-slate-400">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6 rounded-2xl border-t-2 border-emerald-500/50">
+                    <h2 class="text-sm font-bold text-slate-400 tracking-widest mb-4">年度大型支出 (旅遊)</h2>
+                    <input type="number" id="input-travel" class="input-field font-mono text-lg" value="400000" oninput="calculate()">
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="card p-5 rounded-2xl">
+                        <label class="text-[10px] text-slate-500 uppercase tracking-widest block mb-2">總備用金 (包含彈藥)</label>
+                        <input type="number" id="input-cash" class="input-field text-xl font-mono text-emerald-400/90" value="4600000" oninput="calculate()">
+                    </div>
+                    <div class="card p-5 rounded-2xl">
+                        <label class="text-[10px] text-slate-500 uppercase tracking-widest block mb-2">戰略加碼彈藥庫</label>
+                        <input type="number" id="input-ammo" class="input-field text-xl font-mono text-amber-400/90" value="1000000" oninput="calculate()">
+                    </div>
+                </div>
+
+                <div class="card p-8 rounded-2xl shadow-2xl">
+                    <h2 class="text-sm font-bold text-slate-400 tracking-widest mb-8">資產建倉戰略進度</h2>
+                    <div class="space-y-12">
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-blue-400 uppercase tracking-widest">美股配置計畫 (250萬)</span>
+                                <span id="us-time-tag" class="text-[10px] text-slate-500 font-mono italic">--</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="text-[9px] text-slate-500 mb-1 block uppercase">核心一倍 ETF (200萬)</label>
+                                    <input type="number" id="input-us-1x" class="input-field font-mono" value="0" oninput="calculate()">
+                                    <button onclick="quickAdd('input-us-1x', 200000)" class="btn-quick-add w-full">+ 本月扣款 (20萬)</button>
+                                </div>
+                                <div>
+                                    <label class="text-[9px] text-slate-500 mb-1 block uppercase">衛星槓桿 ETF (50萬)</label>
+                                    <input type="number" id="input-us-nx" class="input-field font-mono" value="0" oninput="calculate()">
+                                    <button onclick="quickAdd('input-us-nx', 100000)" class="btn-quick-add w-full">+ 本月扣款 (10萬)</button>
+                                </div>
+                            </div>
+                            <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden flex">
+                                <div id="bar-us-1x" class="bg-blue-500 h-full transition-all duration-1000" style="width: 0%"></div>
+                                <div id="bar-us-nx" class="bg-cyan-500 h-full transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-bold text-purple-400 uppercase tracking-widest">台股配置計畫 (500萬)</span>
+                                <span id="tw-time-tag" class="text-[10px] text-slate-500 font-mono italic">--</span>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="flex-grow">
+                                    <input type="number" id="input-tw" class="input-field font-mono" value="0" oninput="calculate()">
+                                </div>
+                                <button onclick="quickAdd('input-tw', 50000)" class="btn-quick-add whitespace-nowrap px-6 py-2">+ 本週定投 (5萬)</button>
+                            </div>
+                            <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                                <div id="bar-tw" class="bg-purple-500 h-full transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card p-6 rounded-2xl border border-white/5 text-center">
+                        <h3 class="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-3">現金存活分析 (總額)</h3>
+                        <div id="survival-result" class="text-3xl font-mono font-light text-white">--</div>
+                    </div>
+                    <div class="card p-6 rounded-2xl border border-white/5 text-center">
+                        <h3 class="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-3">台股預計完工</h3>
+                        <div id="tw-time-result" class="text-lg font-mono text-slate-300">--</div>
+                    </div>
+                    <div class="card p-6 rounded-2xl border border-white/5 text-center">
+                        <h3 class="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-3">美股預計完工</h3>
+                        <div id="us-time-result" class="text-lg font-mono text-cyan-500/80">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GAS_URL = 'YOUR_GAS_URL'; 
+
+        // 初始化拖曳功能
+        function initSortable() {
+            const el = document.getElementById('expense-list');
+            Sortable.create(el, { 
+                animation: 150, 
+                handle: '.drag-handle', // 確保只鎖定把手
+                ghostClass: 'sortable-ghost',
+                onEnd: () => {
+                    calculate(); // 拖曳結束重新計算數值
+                }
+            });
+        }
+
+        function quickAdd(id, amount) {
+            const input = document.getElementById(id);
+            input.value = (parseFloat(input.value) || 0) + amount;
+            calculate();
+        }
+
+        function formatTime(totalWeeks) {
+            if (totalWeeks <= 0) return "已結案";
+            const months = Math.floor(totalWeeks / 4);
+            const weeks = totalWeeks % 4;
+            let result = "";
+            if (months > 0) result += `${months}個月 `;
+            if (weeks > 0) result += `${weeks}週`;
+            return result.trim();
+        }
+
+        function addRow(name = '', amount = '') {
+            const container = document.getElementById('expense-list');
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center expense-row bg-white/5 p-2 rounded-lg';
+            // 重要：HTML 結構與 CSS Class 需嚴格對應
+            row.innerHTML = `
+                <div class="drag-handle text-slate-600">⋮</div>
+                <input type="text" class="input-field exp-name" value="${name}" placeholder="名稱">
+                <input type="number" class="input-field exp-amount w-24 font-mono text-right" value="${amount}" oninput="calculate()">
+                <span class="btn-delete" onclick="this.parentElement.remove(); calculate();">✕</span>
+            `;
+            container.appendChild(row);
+            calculate();
+        }
+
+        function calculate() {
+            const income = parseFloat(document.getElementById('input-income').value) || 0;
+            const cash = parseFloat(document.getElementById('input-cash').value) || 0;
+            const travel = parseFloat(document.getElementById('input-travel').value) || 0;
+            const us1x = parseFloat(document.getElementById('input-us-1x').value) || 0;
+            const usNx = parseFloat(document.getElementById('input-us-nx').value) || 0;
+            const tw = parseFloat(document.getElementById('input-tw').value) || 0;
+
+            let totalExp = 0;
+            document.querySelectorAll('.exp-amount').forEach(i => totalExp += parseFloat(i.value) || 0);
+            const gap = totalExp - income;
+            document.getElementById('total-expense-display').innerText = totalExp.toLocaleString();
+            document.getElementById('monthly-gap-display').innerText = gap.toLocaleString();
+
+            const annualDrain = (gap * 12) + travel;
+            document.getElementById('survival-result').innerText = (annualDrain > 0 ? (cash / annualDrain).toFixed(2) : "∞") + "年";
+
+            const twWeeks = Math.max(0, Math.ceil((5000000 - tw) / 50000));
+            document.getElementById('tw-time-result').innerText = formatTime(twWeeks);
+            document.getElementById('tw-time-tag').innerText = "倒數時間: " + formatTime(twWeeks);
+            document.getElementById('bar-tw').style.width = Math.min((tw / 5000000) * 100, 100) + "%";
+
+            const u1W = Math.max(0, Math.ceil((2000000 - us1x) / 50000));
+            const uNW = Math.max(0, Math.ceil((500000 - usNx) / 25000));
+            const usMaxW = Math.max(u1W, uNW);
+            document.getElementById('us-time-result').innerText = formatTime(usMaxW);
+            document.getElementById('us-time-tag').innerText = "倒數時間: " + formatTime(usMaxW);
+            document.getElementById('bar-us-1x').style.width = Math.min((us1x / 2500000) * 100, 80) + "%";
+            document.getElementById('bar-us-nx').style.width = Math.min((usNx / 2500000) * 100, 20) + "%";
+        }
+
+        async function saveData() {
+            const status = document.getElementById('sync-status');
+            status.innerText = "同步數據中...";
+            const data = {
+                income: document.getElementById('input-income').value,
+                cash: document.getElementById('input-cash').value,
+                ammo: document.getElementById('input-ammo').value,
+                travel: document.getElementById('input-travel').value,
+                us1x: document.getElementById('input-us-1x').value,
+                usNx: document.getElementById('input-us-nx').value,
+                tw: document.getElementById('input-tw').value,
+                expenses: Array.from(document.querySelectorAll('.expense-row')).map(r => ({
+                    name: r.querySelector('.exp-name').value,
+                    amount: r.querySelector('.exp-amount').value
+                }))
+            };
+            try {
+                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+                status.innerText = "同步成功 " + new Date().toLocaleTimeString();
+            } catch (e) { status.innerText = "同步失敗"; }
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch(GAS_URL);
+                const data = await response.json();
+                if (data.income) {
+                    document.getElementById('input-income').value = data.income;
+                    document.getElementById('input-cash').value = data.cash;
+                    document.getElementById('input-ammo').value = data.ammo;
+                    document.getElementById('input-travel').value = data.travel;
+                    document.getElementById('input-us-1x').value = data.us1x || 0;
+                    document.getElementById('input-us-nx').value = data.usNx || 0;
+                    document.getElementById('input-tw').value = data.tw;
+                    document.getElementById('expense-list').innerHTML = '';
+                    data.expenses.forEach(ex => addRow(ex.name, ex.amount));
+                    calculate();
+                    document.getElementById('sync-status').innerText = "數據載入成功";
+                }
+            } catch (e) {
+                document.getElementById('sync-status').innerText = "系統已就緒";
+                addRow('房貸', 100000); addRow('信貸', 153000); addRow('生活費', 40000);
+            }
+        }
+
+        window.onload = () => {
+            loadData();
+            initSortable(); // 確保 DOM 載入後啟動拖曳監聽
+        };
+    </script>
+</body>
+</html>
 
