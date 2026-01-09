@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>財務戰略管理系統</title>
+    <title>個人資產管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
@@ -52,7 +52,7 @@
         <header class="flex flex-col md:flex-row justify-between items-center mb-12 border-b border-white/10 pb-10 gap-8">
             
             <div class="flex-1 text-center md:text-left">
-                <h1 class="text-2xl font-light tracking-[0.3em] text-white">財務戰略管理</h1>
+                <h1 class="text-2xl font-light tracking-[0.3em] text-white">個人資產管理系統</h1>
                 <div class="flex items-center justify-center md:justify-start gap-2 mt-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <p id="sync-status" class="text-slate-500 text-[10px] tracking-widest uppercase font-semibold">系統連線中</p>
@@ -82,7 +82,7 @@
             <div class="space-y-6">
                 <div class="card p-6 rounded-2xl border-t-2 border-red-500/50 shadow-xl">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">現金流出清單</h2>
+                        <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">現金流清單</h2>
                         <button onclick="addRow()" class="text-[10px] text-slate-500 hover:text-white transition">+ 新增項目</button>
                     </div>
                     <div class="mb-4">
@@ -105,7 +105,7 @@
                 </div>
 
                 <div class="card p-6 rounded-2xl border-t-2 border-emerald-500/50">
-                    <h2 class="text-xs font-bold text-slate-400 tracking-widest mb-4 uppercase">年度大型預留支出</h2>
+                    <h2 class="text-xs font-bold text-slate-400 tracking-widest mb-4 uppercase">年度大型預留支出(出國旅遊)</h2>
                     <input type="number" id="input-travel" class="input-field font-mono text-lg" value="400000" oninput="calculate()">
                 </div>
             </div>
@@ -117,7 +117,7 @@
                         <input type="number" id="input-cash" class="input-field text-xl font-mono text-emerald-400/90" value="4600000" oninput="calculate()">
                     </div>
                     <div class="card p-5 rounded-2xl">
-                        <label class="text-[10px] text-slate-500 uppercase tracking-widest block mb-2 font-bold">戰略加碼彈藥</label>
+                        <label class="text-[10px] text-slate-500 uppercase tracking-widest block mb-2 font-bold">尚餘加碼彈藥</label>
                         <input type="number" id="input-ammo" class="input-field text-xl font-mono text-amber-400/90" value="1000000" oninput="calculate()">
                     </div>
                 </div>
@@ -142,12 +142,12 @@
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                                 <div>
-                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">核心 1X ETF (200萬)</label>
+                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">核心 1倍 ETF (200萬)</label>
                                     <input type="number" id="input-us-1x" class="input-field font-mono" value="0" oninput="calculate()">
                                     <button onclick="quickAdd('input-us-1x', 200000)" class="btn-quick-add w-full">+ 20萬 (月)</button>
                                 </div>
                                 <div>
-                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">衛星 NX ETF (50萬)</label>
+                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">衛星 槓桿 ETF (50萬)</label>
                                     <input type="number" id="input-us-nx" class="input-field font-mono" value="0" oninput="calculate()">
                                     <button onclick="quickAdd('input-us-nx', 100000)" class="btn-quick-add w-full">+ 10萬 (月)</button>
                                 </div>
@@ -184,15 +184,15 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="card p-6 rounded-2xl border border-white/5 text-center">
-                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">現金存活分析</h3>
+                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">現金尚可存活</h3>
                         <div id="survival-result" class="text-3xl font-mono font-light text-white">--</div>
                     </div>
                     <div class="card p-6 rounded-2xl border border-white/5 text-center">
-                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">台股完工進度</h3>
+                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">台股預計完成建倉進度</h3>
                         <div id="tw-time-result" class="text-xl font-mono text-slate-300">--</div>
                     </div>
                     <div class="card p-6 rounded-2xl border border-white/5 text-center">
-                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">美股完工進度</h3>
+                        <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">美股預計完成建倉進度</h3>
                         <div id="us-time-result" class="text-xl font-mono text-cyan-500/80">--</div>
                     </div>
                 </div>
