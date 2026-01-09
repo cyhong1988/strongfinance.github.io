@@ -288,36 +288,52 @@
             const totalAssets = cash + tw + us1x + usNx + pnlUsTwd + pnlTw;
             document.getElementById('total-assets-display').innerText = Math.floor(totalAssets).toLocaleString();
 
-            // --- 重新定義的支出與缺口計算邏輯 ---
+            // --- 支出與缺口計算 ---
             let totalExp = 0;
             document.querySelectorAll('.exp-amount').forEach(i => totalExp += parseFloat(i.value) || 0);
             document.getElementById('display-total-expense').value = totalExp.toLocaleString();
             
-            // 計算差額 (收入 - 支出)
             const balance = income - totalExp;
             const gapDisplay = document.getElementById('monthly-gap-display');
             
             if (balance > 0) {
-                // 有結餘：收入大於支出，顯示正號與綠色
                 gapDisplay.innerText = "+" + balance.toLocaleString();
                 gapDisplay.className = "text-2xl font-mono font-bold profit"; 
             } else if (balance < 0) {
-                // 有缺口：支出大於收入，顯示負號與紅色
                 gapDisplay.innerText = "-" + Math.abs(balance).toLocaleString();
                 gapDisplay.className = "text-2xl font-mono font-bold loss";
             } else {
-                // 平衡
                 gapDisplay.innerText = "0";
                 gapDisplay.className = "text-2xl font-mono font-bold text-slate-400";
             }
-            // --------------------------------
 
             document.getElementById('annual-expense-display').innerText = (totalExp * 12).toLocaleString();
 
-            // 生存年限計算 (用缺口計算，若無缺口則顯示無限)
-            const gap = totalExp - income;
-            const annualDrain = gap * 12; 
-            document.getElementById('survival-result').innerText = (annualDrain > 0 ? (cash / annualDrain).toFixed(2) : "∞") + " 年";
+            // --- 修改後的生存時間計算 (年/月/日) ---
+            const gap = totalExp - income; // 每月淨支出
+            if (gap <= 0) {
+                document.getElementById('survival-result').innerText = "∞";
+                document.getElementById('survival-result').classList.add('text-emerald-400');
+            } else {
+                let totalMonths = cash / gap;
+                const years = Math.floor(totalMonths / 12);
+                const remainingMonths = Math.floor(totalMonths % 12);
+                const remainingDays = Math.floor((totalMonths - Math.floor(totalMonths)) * 30.44);
+                
+                let timeStr = "";
+                if (years > 0) timeStr += `${years}年`;
+                if (remainingMonths > 0) timeStr += `${remainingMonths}月`;
+                timeStr += `${remainingDays}天`;
+                
+                document.getElementById('survival-result').innerText = timeStr;
+                document.getElementById('survival-result').classList.remove('text-emerald-400');
+                // 如果小於半年，標示為警告色
+                if (totalMonths < 6) {
+                    document.getElementById('survival-result').className = "text-2xl font-mono font-bold loss";
+                } else {
+                    document.getElementById('survival-result').className = "text-2xl font-mono font-bold text-white";
+                }
+            }
 
             // 進度預估
             const twWeeks = Math.max(0, Math.ceil((5000000 - tw) / 50000));
@@ -333,6 +349,7 @@
             document.getElementById('bar-us-1x').style.width = Math.min((us1x / 2500000) * 100, 80) + "%";
             document.getElementById('bar-us-nx').style.width = Math.min((usNx / 2500000) * 100, 20) + "%";
         }
+
 
 
         async function saveData() {
