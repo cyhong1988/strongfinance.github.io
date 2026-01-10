@@ -88,11 +88,11 @@
                     <div class="space-y-3 mb-6">
                         <div>
                             <label class="block text-[10px] text-slate-500 mb-1 uppercase tracking-wider">每月固定收入</label>
-                            <input type="number" id="input-income" class="input-field border-emerald-900/30 font-mono text-emerald-400" value="146000" oninput="calculate()">
+                            <input type="number" id="input-income" class="input-field border-emerald-900/30 font-mono text-emerald-400" placeholder="請輸入金額" oninput="calculate()">
                         </div>
                         <div>
                             <label class="block text-[10px] text-slate-500 mb-1 uppercase tracking-wider">每月固定支出 (自動加總)</label>
-                            <input type="text" id="display-total-expense" class="input-field input-readonly font-mono text-red-400/80" value="0" readonly>
+                            <input type="text" id="display-total-expense" class="input-field input-readonly font-mono text-red-400/80" placeholder="--" readonly>
                         </div>
                     </div>
                     
@@ -117,7 +117,7 @@
                         <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">目前出國旅遊支出</h2>
                         <span class="text-[9px] text-slate-500 uppercase tracking-tighter">僅紀錄</span>
                     </div>
-                    <input type="number" id="input-travel" class="input-field font-mono text-lg text-slate-400" value="400000" oninput="calculate()">
+                    <input type="number" id="input-travel" class="input-field font-mono text-lg text-slate-400" placeholder="請輸入金額" oninput="calculate()">
                 </div>
             </div>
 
@@ -128,14 +128,14 @@
                             <label class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">流動現金總額 (自動加總)</label>
                             <button onclick="addRow('bank')" class="text-[9px] bg-white/5 px-2 py-1 rounded hover:bg-white/10">+ 新增銀行</button>
                         </div>
-                        <input type="text" id="input-cash" class="input-field input-readonly text-2xl font-mono text-emerald-400/90 mb-4" value="0" readonly>
+                        <input type="text" id="input-cash" class="input-field input-readonly text-2xl font-mono text-emerald-400/90 mb-4" placeholder="--" readonly>
                         <div id="bank-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
                     </div>
 
                     <div class="card p-6 rounded-2xl flex flex-col justify-between">
                         <div>
                             <label class="text-[10px] text-slate-500 uppercase tracking-widest block mb-2 font-bold">尚餘加碼彈藥</label>
-                            <input type="number" id="input-ammo" class="input-field text-xl font-mono text-amber-400/90" value="1000000" oninput="calculate()">
+                            <input type="number" id="input-ammo" class="input-field text-xl font-mono text-amber-400/90" placeholder="請輸入金額" oninput="calculate()">
                         </div>
                         <p class="text-[9px] text-slate-500 italic mt-4">此欄位手動填寫，不計入上方自動加總。</p>
                     </div>
@@ -150,23 +150,23 @@
                                 <div class="flex gap-8 items-center">
                                     <div class="text-right">
                                         <label class="text-[10px] text-slate-500 uppercase block font-bold">損益 (USD)</label>
-                                        <input type="number" id="pnl-us-usd" class="input-field w-24 font-mono text-right text-sm" value="0" step="0.01" oninput="calculate()">
+                                        <input type="number" id="pnl-us-usd" class="input-field w-24 font-mono text-right text-sm" placeholder="空白" step="0.01" oninput="calculate()">
                                     </div>
                                     <div class="text-right border-l border-white/10 pl-6">
                                         <label class="text-[10px] text-slate-500 uppercase block font-bold">折合台幣</label>
-                                        <div id="pnl-us-twd-display" class="text-md font-mono font-bold">0</div>
+                                        <div id="pnl-us-twd-display" class="text-md font-mono font-bold">--</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                                 <div>
                                     <label class="text-[10px] text-slate-500 mb-1 block uppercase">核心 1倍 ETF (200萬)</label>
-                                    <input type="number" id="input-us-1x" class="input-field font-mono" value="0" oninput="calculate()">
+                                    <input type="number" id="input-us-1x" class="input-field font-mono" placeholder="請輸入本金" oninput="calculate()">
                                     <button onclick="quickAdd('input-us-1x', 200000)" class="btn-quick-add w-full">+ 20萬 (月)</button>
                                 </div>
                                 <div>
                                     <label class="text-[10px] text-slate-500 mb-1 block uppercase">衛星 槓桿 ETF (50萬)</label>
-                                    <input type="number" id="input-us-nx" class="input-field font-mono" value="0" oninput="calculate()">
+                                    <input type="number" id="input-us-nx" class="input-field font-mono" placeholder="請輸入本金" oninput="calculate()">
                                     <button onclick="quickAdd('input-us-nx', 100000)" class="btn-quick-add w-full">+ 10萬 (月)</button>
                                 </div>
                             </div>
@@ -182,13 +182,13 @@
                                 <span class="text-sm font-bold text-purple-400 tracking-widest">台股配置 (500萬)</span>
                                 <div class="text-right">
                                     <label class="text-[10px] text-slate-500 uppercase block font-bold">目前總損益 (TWD)</label>
-                                    <input type="number" id="pnl-tw" class="input-field w-32 font-mono text-right text-sm" value="0" oninput="calculate()">
+                                    <input type="number" id="pnl-tw" class="input-field w-32 font-mono text-right text-sm" placeholder="空白" oninput="calculate()">
                                 </div>
                             </div>
                             <div class="flex gap-4 pt-2">
                                 <div class="flex-grow">
                                     <label class="text-[10px] text-slate-500 mb-1 block uppercase">已投入本金</label>
-                                    <input type="number" id="input-tw" class="input-field font-mono" value="0" oninput="calculate()">
+                                    <input type="number" id="input-tw" class="input-field font-mono" placeholder="請輸入本金" oninput="calculate()">
                                 </div>
                                 <button onclick="quickAdd('input-tw', 50000)" class="btn-quick-add whitespace-nowrap px-8 self-end font-semibold">+ 5萬 (週)</button>
                             </div>
@@ -222,11 +222,14 @@
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbxbYPyWLw2Da1goYFISnTpsSGfnuxNGEkhJIOU2iozNDQA7xnVROFjBM5rKj98foX0h/exec'; 
         let currentFxRate = 32.5;
 
+        // 小助手：強制將 0 或 null 轉換為空字串以保持欄位空白
+        const emptyIfZero = (val) => (val == 0 || val === null || val === undefined) ? "" : val;
+
         async function fetchFxRate() {
             try {
                 const response = await fetch('https://open.er-api.com/v6/latest/USD');
                 const data = await response.json();
-                if (data && data.rates && data.rates.TWD) {
+                if (data?.rates?.TWD) {
                     currentFxRate = data.rates.TWD;
                     document.getElementById('fx-rate-display').innerText = currentFxRate.toFixed(2);
                     calculate();
@@ -259,20 +262,23 @@
             row.className = `flex gap-2 items-center ${type}-row bg-white/5 p-2 rounded-lg mb-1`;
             const nameClass = type === 'bank' ? 'bank-name' : 'exp-name';
             const amountClass = type === 'bank' ? 'bank-amount' : 'exp-amount';
+            
             row.innerHTML = `
                 <div class="drag-handle text-slate-600">⋮</div>
                 <input type="text" class="input-field ${nameClass} text-xs" value="${name}" placeholder="${type === 'bank' ? '銀行名稱' : '項目'}">
-                <input type="number" class="input-field ${amountClass} w-24 font-mono text-right text-xs" value="${amount}" oninput="calculate()">
+                <input type="number" class="input-field ${amountClass} w-24 font-mono text-right text-xs" value="${emptyIfZero(amount)}" placeholder="金額" oninput="calculate()">
                 <span class="btn-delete" onclick="this.parentElement.remove(); calculate();">✕</span>`;
             container.appendChild(row);
             calculate();
         }
 
         function calculate() {
-            // 銀行加總
             let totalBankCash = 0;
-            document.querySelectorAll('.bank-amount').forEach(i => totalBankCash += parseFloat(i.value) || 0);
-            document.getElementById('input-cash').value = Math.floor(totalBankCash).toLocaleString();
+            document.querySelectorAll('.bank-amount').forEach(i => {
+                const val = parseFloat(i.value);
+                if (!isNaN(val)) totalBankCash += val;
+            });
+            document.getElementById('input-cash').value = totalBankCash === 0 ? "" : Math.floor(totalBankCash).toLocaleString();
 
             const income = parseFloat(document.getElementById('input-income').value) || 0;
             const cash = totalBankCash;
@@ -283,16 +289,18 @@
             const pnlTw = parseFloat(document.getElementById('pnl-tw').value) || 0;
 
             const pnlUsTwd = pnlUsUsd * currentFxRate;
-            document.getElementById('pnl-us-twd-display').innerText = Math.floor(pnlUsTwd).toLocaleString();
+            document.getElementById('pnl-us-twd-display').innerText = pnlUsUsd === 0 ? "--" : Math.floor(pnlUsTwd).toLocaleString();
             document.getElementById('pnl-us-twd-display').className = `text-md font-mono mt-1 font-bold ${pnlUsUsd >= 0 ? 'profit' : 'loss'}`;
 
             const totalAssets = cash + tw + us1x + usNx + pnlUsTwd + pnlTw;
-            document.getElementById('total-assets-display').innerText = Math.floor(totalAssets).toLocaleString();
+            document.getElementById('total-assets-display').innerText = totalAssets === 0 ? "--" : Math.floor(totalAssets).toLocaleString();
 
-            // --- 支出與缺口計算 ---
             let totalExp = 0;
-            document.querySelectorAll('.exp-amount').forEach(i => totalExp += parseFloat(i.value) || 0);
-            document.getElementById('display-total-expense').value = totalExp.toLocaleString();
+            document.querySelectorAll('.exp-amount').forEach(i => {
+                const val = parseFloat(i.value);
+                if (!isNaN(val)) totalExp += val;
+            });
+            document.getElementById('display-total-expense').value = totalExp === 0 ? "" : totalExp.toLocaleString();
             
             const balance = income - totalExp;
             const gapDisplay = document.getElementById('monthly-gap-display');
@@ -308,13 +316,15 @@
                 gapDisplay.className = "text-2xl font-mono font-bold text-slate-400";
             }
 
-            document.getElementById('annual-expense-display').innerText = (totalExp * 12).toLocaleString();
+            document.getElementById('annual-expense-display').innerText = totalExp === 0 ? "--" : (totalExp * 12).toLocaleString();
 
-            // --- 修改後的生存時間計算 (年/月/日) ---
-            const gap = totalExp - income; // 每月淨支出
+            const gap = totalExp - income;
             if (gap <= 0) {
                 document.getElementById('survival-result').innerText = "∞";
-                document.getElementById('survival-result').classList.add('text-emerald-400');
+                document.getElementById('survival-result').className = "text-3xl font-mono font-light text-emerald-400";
+            } else if (cash === 0) {
+                document.getElementById('survival-result').innerText = "0天";
+                document.getElementById('survival-result').className = "text-3xl font-mono font-light loss";
             } else {
                 let totalMonths = cash / gap;
                 const years = Math.floor(totalMonths / 12);
@@ -327,31 +337,20 @@
                 timeStr += `又${remainingDays}天`;
                 
                 document.getElementById('survival-result').innerText = timeStr;
-                document.getElementById('survival-result').classList.remove('text-emerald-400');
-                // 如果小於半年，標示為警告色
-                if (totalMonths < 6) {
-                    document.getElementById('survival-result').className = "text-2xl font-mono font-bold loss";
-                } else {
-                    document.getElementById('survival-result').className = "text-2xl font-mono font-bold text-white";
-                }
+                document.getElementById('survival-result').className = totalMonths < 6 ? "text-2xl font-mono font-bold loss" : "text-2xl font-mono font-bold text-white";
             }
 
-            // 進度預估
             const twWeeks = Math.max(0, Math.ceil((5000000 - tw) / 50000));
-            document.getElementById('tw-time-result').innerText = formatTime(twWeeks);
-            document.getElementById('tw-time-tag').innerText = "預計建倉完成時間: " + formatTime(twWeeks);
+            document.getElementById('tw-time-result').innerText = tw === 0 ? "--" : formatTime(twWeeks);
             document.getElementById('bar-tw').style.width = Math.min((tw / 5000000) * 100, 100) + "%";
 
             const u1W = Math.max(0, Math.ceil((2000000 - us1x) / 50000));
             const uNW = Math.max(0, Math.ceil((500000 - usNx) / 25000));
             const usMaxW = Math.max(u1W, uNW);
-            document.getElementById('us-time-result').innerText = formatTime(usMaxW);
-            document.getElementById('us-time-tag').innerText = "預計建倉完成時間: " + formatTime(usMaxW);
+            document.getElementById('us-time-result').innerText = (us1x === 0 && usNx === 0) ? "--" : formatTime(usMaxW);
             document.getElementById('bar-us-1x').style.width = Math.min((us1x / 2500000) * 100, 80) + "%";
             document.getElementById('bar-us-nx').style.width = Math.min((usNx / 2500000) * 100, 20) + "%";
         }
-
-
 
         async function saveData() {
             const status = document.getElementById('sync-status');
@@ -385,31 +384,32 @@
             try {
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
-                if (data.income !== undefined) {
-                    document.getElementById('input-income').value = data.income;
-                    document.getElementById('input-ammo').value = data.ammo;
-                    document.getElementById('input-travel').value = data.travel;
-                    document.getElementById('input-us-1x').value = data.us1x || 0;
-                    document.getElementById('input-us-nx').value = data.usNx || 0;
-                    document.getElementById('input-tw').value = data.tw;
-                    document.getElementById('pnl-us-usd').value = data.pnlUsUsd || 0;
-                    document.getElementById('pnl-tw').value = data.pnlTw || 0;
+                if (data && data.income !== undefined) {
+                    // 使用 emptyIfZero 確保如果是 0 則顯示空白
+                    document.getElementById('input-income').value = emptyIfZero(data.income);
+                    document.getElementById('input-ammo').value = emptyIfZero(data.ammo);
+                    document.getElementById('input-travel').value = emptyIfZero(data.travel);
+                    document.getElementById('input-us-1x').value = emptyIfZero(data.us1x);
+                    document.getElementById('input-us-nx').value = emptyIfZero(data.usNx);
+                    document.getElementById('input-tw').value = emptyIfZero(data.tw);
+                    document.getElementById('pnl-us-usd').value = emptyIfZero(data.pnlUsUsd);
+                    document.getElementById('pnl-tw').value = emptyIfZero(data.pnlTw);
+                    
                     document.getElementById('bank-list').innerHTML = '';
-                    if (data.banks && data.banks.length > 0) {
-                        data.banks.forEach(b => addRow('bank', b.name, b.amount));
+                    if (data.banks?.length > 0) {
+                        data.banks.forEach(b => addRow('bank', b.name, emptyIfZero(b.amount)));
                     } else {
-                        ['中信','樂天','王道','上海商銀','台新'].forEach(n => addRow('bank', n, '0'));
+                        ['中信','樂天','王道','上海商銀','台新'].forEach(n => addRow('bank', n, ''));
                     }
+                    
                     document.getElementById('expense-list').innerHTML = '';
-                    if (data.expenses) {
-                        data.expenses.forEach(ex => addRow('expense', ex.name, ex.amount));
+                    if (data.expenses?.length > 0) {
+                        data.expenses.forEach(ex => addRow('expense', ex.name, emptyIfZero(ex.amount)));
                     }
                     calculate();
                 }
             } catch (e) { 
-                ['中信','樂天','王道','上海商銀','台新'].forEach(n => addRow('bank', n, '0'));
-                addRow('expense', '房貸', 100000); 
-                addRow('expense', '生活費', 40000); 
+                ['中信','樂天','王道','上海商銀','台新'].forEach(n => addRow('bank', n, ''));
             }
         }
 
