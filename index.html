@@ -171,6 +171,9 @@
                                     <button onclick="quickAdd('input-us-nx', 100000)" class="btn-quick-add w-full">+ 10萬 (月)</button>
                                 </div>
                             </div>
+                            <div class="flex justify-end mb-[-12px]">
+                                <span id="percent-us" class="text-[10px] font-mono font-bold text-blue-400">0.0%</span>
+                            </div>
                             <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden flex">
                                 <div id="bar-us-1x" class="bg-blue-500 h-full transition-all duration-1000" style="width: 0%"></div>
                                 <div id="bar-us-nx" class="bg-cyan-400 h-full transition-all duration-1000" style="width: 0%"></div>
@@ -196,6 +199,9 @@
                                     <input type="number" id="input-tw" class="input-field font-mono" placeholder="請輸入本金" oninput="calculate()">
                                 </div>
                                 <button onclick="quickAdd('input-tw', 50000)" class="btn-quick-add whitespace-nowrap px-8 self-end font-semibold">+ 5萬 (週)</button>
+                            </div>
+                            <div class="flex justify-end mb-[-12px]">
+                                <span id="percent-tw" class="text-[10px] font-mono font-bold text-purple-400">0.0%</span>
                             </div>
                             <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                                 <div id="bar-tw" class="bg-purple-500 h-full transition-all duration-1000" style="width: 0%"></div>
@@ -341,17 +347,25 @@
                 document.getElementById('survival-result').className = totalMonths < 6 ? "text-2xl font-mono font-bold loss" : "text-2xl font-mono font-bold text-white";
             }
 
+            // 台股進度計算
+            const twRatio = Math.min((tw / targetTw) * 100, 100);
+            document.getElementById('percent-tw').innerText = twRatio.toFixed(1) + "%";
+            document.getElementById('bar-tw').style.width = twRatio + "%";
             const twWeeks = Math.max(0, Math.ceil((targetTw - tw) / 50000));
             document.getElementById('tw-time-result').innerText = tw === 0 ? "--" : formatTime(twWeeks);
-            document.getElementById('bar-tw').style.width = Math.min((tw / targetTw) * 100, 100) + "%";
 
+            // 美股進度計算
+            const usTotal = us1x + usNx;
+            const usRatio = Math.min((usTotal / targetUs) * 100, 100);
+            document.getElementById('percent-us').innerText = usRatio.toFixed(1) + "%";
+            document.getElementById('bar-us-1x').style.width = Math.min((us1x / targetUs) * 100, 100) + "%";
+            document.getElementById('bar-us-nx').style.width = Math.min((usNx / targetUs) * 100, 100) + "%";
+            
             const u1Goal = targetUs * 0.8;
             const uNGoal = targetUs * 0.2;
             const u1W = Math.max(0, Math.ceil((u1Goal - us1x) / 50000));
             const uNW = Math.max(0, Math.ceil((uNGoal - usNx) / 25000));
             document.getElementById('us-time-result').innerText = (us1x === 0 && usNx === 0) ? "--" : formatTime(Math.max(u1W, uNW));
-            document.getElementById('bar-us-1x').style.width = Math.min((us1x / targetUs) * 100, 100) + "%";
-            document.getElementById('bar-us-nx').style.width = Math.min((usNx / targetUs) * 100, 100) + "%";
         }
 
         async function saveData() {
