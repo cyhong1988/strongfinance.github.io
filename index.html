@@ -11,6 +11,8 @@
         .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .input-field { background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: white; padding: 6px 10px; border-radius: 6px; width: 100%; font-size: 0.875rem; }
         .input-readonly { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(51, 65, 85, 0.3); color: #94a3b8; cursor: not-allowed; }
+        .input-target { background: transparent; border-bottom: 1px dashed #475569; color: #94a3b8; width: 90px; text-align: center; font-family: monospace; }
+        .input-target:focus { outline: none; border-color: #60a5fa; color: white; }
         .btn-delete { color: #ef4444; cursor: pointer; transition: opacity 0.2s; padding: 0 8px; }
         .drag-handle { cursor: grab; color: #475569; font-size: 1.2rem; user-select: none; padding-right: 8px; }
         
@@ -95,9 +97,7 @@
                             <input type="text" id="display-total-expense" class="input-field input-readonly font-mono text-red-400/80" placeholder="--" readonly>
                         </div>
                     </div>
-                    
                     <div id="expense-list" class="space-y-2 min-h-[50px]"></div>
-                    
                     <div class="mt-8 pt-4 border-t border-white/5">
                         <div class="flex justify-between items-end">
                             <div>
@@ -111,7 +111,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="card p-6 rounded-2xl border-t-2 border-slate-500/50">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">目前出國旅遊支出</h2>
@@ -131,7 +130,6 @@
                         <input type="text" id="input-cash" class="input-field input-readonly text-2xl font-mono text-emerald-400/90 mb-4" placeholder="--" readonly>
                         <div id="bank-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
                     </div>
-
                     <div class="card p-6 rounded-2xl flex flex-col justify-between">
                         <div>
                             <label class="text-[10px] text-slate-500 uppercase tracking-widest block mb-2 font-bold">尚餘加碼彈藥</label>
@@ -145,32 +143,34 @@
                     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-10">資產建倉進度與實時損益</h2>
                     <div class="space-y-14">
                         <div class="space-y-4">
-                            <div class="flex justify-between items-end border-b border-white/5 pb-3">
-                                <span class="text-sm font-bold text-blue-400 tracking-widest">美股配置 (250萬)</span>
-                                <div class="flex gap-8 items-center">
+                            <div class="flex flex-wrap justify-between items-end border-b border-white/5 pb-3 gap-y-4">
+                                <span class="text-sm font-bold text-blue-400 tracking-widest flex items-center gap-2 min-w-[180px]">
+                                    美股配置 
+                                    <input type="number" id="target-us" class="input-target" value="2800000" oninput="calculate()">
+                                </span>
+                                <div class="flex gap-6 items-center flex-grow justify-end">
                                     <div class="text-right">
-                                        <label class="text-[10px] text-slate-500 uppercase block font-bold">損益 (USD)</label>
-                                        <input type="number" id="pnl-us-usd" class="input-field w-24 font-mono text-right text-sm" placeholder="空白" step="0.01" oninput="calculate()">
+                                        <label class="text-[10px] text-slate-500 uppercase block font-bold mb-1">損益 (USD)</label>
+                                        <input type="number" id="pnl-us-usd" class="input-field w-28 font-mono text-right text-sm" placeholder="空白" step="0.01" oninput="calculate()">
                                     </div>
-                                    <div class="text-right border-l border-white/10 pl-6">
-                                        <label class="text-[10px] text-slate-500 uppercase block font-bold">折合台幣</label>
-                                        <div id="pnl-us-twd-display" class="text-md font-mono font-bold">--</div>
+                                    <div class="text-right border-l border-white/10 pl-6 min-w-[110px]">
+                                        <label class="text-[10px] text-slate-500 uppercase block font-bold mb-1">折合台幣</label>
+                                        <div id="pnl-us-twd-display" class="text-lg font-mono font-bold leading-tight">--</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                                 <div>
-                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">核心 1倍 ETF (200萬)</label>
+                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">核心 1倍 ETF</label>
                                     <input type="number" id="input-us-1x" class="input-field font-mono" placeholder="請輸入本金" oninput="calculate()">
                                     <button onclick="quickAdd('input-us-1x', 200000)" class="btn-quick-add w-full">+ 20萬 (月)</button>
                                 </div>
                                 <div>
-                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">衛星 槓桿 ETF (50萬)</label>
+                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">衛星 槓桿 ETF</label>
                                     <input type="number" id="input-us-nx" class="input-field font-mono" placeholder="請輸入本金" oninput="calculate()">
                                     <button onclick="quickAdd('input-us-nx', 100000)" class="btn-quick-add w-full">+ 10萬 (月)</button>
                                 </div>
                             </div>
-                            <div id="us-time-tag" class="text-[10px] text-slate-500 font-mono italic text-right tracking-wider">--</div>
                             <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden flex">
                                 <div id="bar-us-1x" class="bg-blue-500 h-full transition-all duration-1000" style="width: 0%"></div>
                                 <div id="bar-us-nx" class="bg-cyan-400 h-full transition-all duration-1000" style="width: 0%"></div>
@@ -178,11 +178,16 @@
                         </div>
 
                         <div class="space-y-4">
-                            <div class="flex justify-between items-end border-b border-white/5 pb-3">
-                                <span class="text-sm font-bold text-purple-400 tracking-widest">台股配置 (500萬)</span>
-                                <div class="text-right">
-                                    <label class="text-[10px] text-slate-500 uppercase block font-bold">目前總損益 (TWD)</label>
-                                    <input type="number" id="pnl-tw" class="input-field w-32 font-mono text-right text-sm" placeholder="空白" oninput="calculate()">
+                            <div class="flex flex-wrap justify-between items-end border-b border-white/5 pb-3 gap-y-4">
+                                <span class="text-sm font-bold text-purple-400 tracking-widest flex items-center gap-2 min-w-[180px]">
+                                    台股配置 
+                                    <input type="number" id="target-tw" class="input-target" value="3990000" oninput="calculate()">
+                                </span>
+                                <div class="text-right flex-grow flex justify-end">
+                                    <div class="w-48">
+                                        <label class="text-[10px] text-slate-500 uppercase block font-bold mb-1">目前總損益 (TWD)</label>
+                                        <input type="number" id="pnl-tw" class="input-field w-full font-mono text-right text-sm" placeholder="空白" oninput="calculate()">
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex gap-4 pt-2">
@@ -192,7 +197,6 @@
                                 </div>
                                 <button onclick="quickAdd('input-tw', 50000)" class="btn-quick-add whitespace-nowrap px-8 self-end font-semibold">+ 5萬 (週)</button>
                             </div>
-                            <div id="tw-time-tag" class="text-[10px] text-slate-500 font-mono italic text-right tracking-wider">--</div>
                             <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                                 <div id="bar-tw" class="bg-purple-500 h-full transition-all duration-1000" style="width: 0%"></div>
                             </div>
@@ -222,7 +226,6 @@
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbxbYPyWLw2Da1goYFISnTpsSGfnuxNGEkhJIOU2iozNDQA7xnVROFjBM5rKj98foX0h/exec'; 
         let currentFxRate = 32.5;
 
-        // 小助手：強制將 0 或 null 轉換為空字串以保持欄位空白
         const emptyIfZero = (val) => (val == 0 || val === null || val === undefined) ? "" : val;
 
         async function fetchFxRate() {
@@ -239,22 +242,10 @@
             }
         }
 
-function initSortable() {
-    // 支出清單拖曳
-    Sortable.create(document.getElementById('expense-list'), { 
-        animation: 150, 
-        handle: '.drag-handle', 
-        onEnd: () => calculate() 
-    });
-
-    // 銀行清單拖曳 (新增這一段)
-    Sortable.create(document.getElementById('bank-list'), { 
-        animation: 150, 
-        handle: '.drag-handle', 
-        onEnd: () => calculate() 
-    });
-}
-
+        function initSortable() {
+            Sortable.create(document.getElementById('expense-list'), { animation: 150, handle: '.drag-handle', onEnd: () => calculate() });
+            Sortable.create(document.getElementById('bank-list'), { animation: 150, handle: '.drag-handle', onEnd: () => calculate() });
+        }
 
         function quickAdd(id, amount) {
             const input = document.getElementById(id);
@@ -301,9 +292,12 @@ function initSortable() {
             const pnlUsUsd = parseFloat(document.getElementById('pnl-us-usd').value) || 0;
             const pnlTw = parseFloat(document.getElementById('pnl-tw').value) || 0;
 
+            const targetUs = parseFloat(document.getElementById('target-us').value) || 2800000;
+            const targetTw = parseFloat(document.getElementById('target-tw').value) || 3990000;
+
             const pnlUsTwd = pnlUsUsd * currentFxRate;
             document.getElementById('pnl-us-twd-display').innerText = pnlUsUsd === 0 ? "--" : Math.floor(pnlUsTwd).toLocaleString();
-            document.getElementById('pnl-us-twd-display').className = `text-md font-mono mt-1 font-bold ${pnlUsUsd >= 0 ? 'profit' : 'loss'}`;
+            document.getElementById('pnl-us-twd-display').className = `text-lg font-mono font-bold ${pnlUsUsd >= 0 ? 'profit' : 'loss'}`;
 
             const totalAssets = cash + tw + us1x + usNx + pnlUsTwd + pnlTw;
             document.getElementById('total-assets-display').innerText = totalAssets === 0 ? "--" : Math.floor(totalAssets).toLocaleString();
@@ -317,7 +311,6 @@ function initSortable() {
             
             const balance = income - totalExp;
             const gapDisplay = document.getElementById('monthly-gap-display');
-            
             if (balance > 0) {
                 gapDisplay.innerText = "+" + balance.toLocaleString();
                 gapDisplay.className = "text-2xl font-mono font-bold profit"; 
@@ -343,26 +336,22 @@ function initSortable() {
                 const years = Math.floor(totalMonths / 12);
                 const remainingMonths = Math.floor(totalMonths % 12);
                 const remainingDays = Math.floor((totalMonths - Math.floor(totalMonths)) * 30.44);
-                
-                let timeStr = "";
-                if (years > 0) timeStr += `${years}年`;
-                if (remainingMonths > 0) timeStr += `${remainingMonths}個月`;
-                timeStr += `又${remainingDays}天`;
-                
+                let timeStr = (years > 0 ? `${years}年` : "") + (remainingMonths > 0 ? `${remainingMonths}個月` : "") + `又${remainingDays}天`;
                 document.getElementById('survival-result').innerText = timeStr;
                 document.getElementById('survival-result').className = totalMonths < 6 ? "text-2xl font-mono font-bold loss" : "text-2xl font-mono font-bold text-white";
             }
 
-            const twWeeks = Math.max(0, Math.ceil((5000000 - tw) / 50000));
+            const twWeeks = Math.max(0, Math.ceil((targetTw - tw) / 50000));
             document.getElementById('tw-time-result').innerText = tw === 0 ? "--" : formatTime(twWeeks);
-            document.getElementById('bar-tw').style.width = Math.min((tw / 5000000) * 100, 100) + "%";
+            document.getElementById('bar-tw').style.width = Math.min((tw / targetTw) * 100, 100) + "%";
 
-            const u1W = Math.max(0, Math.ceil((2000000 - us1x) / 50000));
-            const uNW = Math.max(0, Math.ceil((500000 - usNx) / 25000));
-            const usMaxW = Math.max(u1W, uNW);
-            document.getElementById('us-time-result').innerText = (us1x === 0 && usNx === 0) ? "--" : formatTime(usMaxW);
-            document.getElementById('bar-us-1x').style.width = Math.min((us1x / 2500000) * 100, 80) + "%";
-            document.getElementById('bar-us-nx').style.width = Math.min((usNx / 2500000) * 100, 20) + "%";
+            const u1Goal = targetUs * 0.8;
+            const uNGoal = targetUs * 0.2;
+            const u1W = Math.max(0, Math.ceil((u1Goal - us1x) / 50000));
+            const uNW = Math.max(0, Math.ceil((uNGoal - usNx) / 25000));
+            document.getElementById('us-time-result').innerText = (us1x === 0 && usNx === 0) ? "--" : formatTime(Math.max(u1W, uNW));
+            document.getElementById('bar-us-1x').style.width = Math.min((us1x / targetUs) * 100, 100) + "%";
+            document.getElementById('bar-us-nx').style.width = Math.min((usNx / targetUs) * 100, 100) + "%";
         }
 
         async function saveData() {
@@ -375,6 +364,8 @@ function initSortable() {
                 us1x: document.getElementById('input-us-1x').value,
                 usNx: document.getElementById('input-us-nx').value,
                 tw: document.getElementById('input-tw').value,
+                targetUs: document.getElementById('target-us').value,
+                targetTw: document.getElementById('target-tw').value,
                 pnlUsUsd: document.getElementById('pnl-us-usd').value,
                 pnlTw: document.getElementById('pnl-tw').value,
                 banks: Array.from(document.querySelectorAll('.bank-row')).map(r => ({
@@ -398,13 +389,14 @@ function initSortable() {
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
                 if (data && data.income !== undefined) {
-                    // 使用 emptyIfZero 確保如果是 0 則顯示空白
                     document.getElementById('input-income').value = emptyIfZero(data.income);
                     document.getElementById('input-ammo').value = emptyIfZero(data.ammo);
                     document.getElementById('input-travel').value = emptyIfZero(data.travel);
                     document.getElementById('input-us-1x').value = emptyIfZero(data.us1x);
                     document.getElementById('input-us-nx').value = emptyIfZero(data.usNx);
                     document.getElementById('input-tw').value = emptyIfZero(data.tw);
+                    document.getElementById('target-us').value = data.targetUs || 2800000;
+                    document.getElementById('target-tw').value = data.targetTw || 3990000;
                     document.getElementById('pnl-us-usd').value = emptyIfZero(data.pnlUsUsd);
                     document.getElementById('pnl-tw').value = emptyIfZero(data.pnlTw);
                     
