@@ -239,9 +239,22 @@
             }
         }
 
-        function initSortable() {
-            Sortable.create(document.getElementById('expense-list'), { animation: 150, handle: '.drag-handle', onEnd: () => calculate() });
-        }
+function initSortable() {
+    // 支出清單拖曳
+    Sortable.create(document.getElementById('expense-list'), { 
+        animation: 150, 
+        handle: '.drag-handle', 
+        onEnd: () => calculate() 
+    });
+
+    // 銀行清單拖曳 (新增這一段)
+    Sortable.create(document.getElementById('bank-list'), { 
+        animation: 150, 
+        handle: '.drag-handle', 
+        onEnd: () => calculate() 
+    });
+}
+
 
         function quickAdd(id, amount) {
             const input = document.getElementById(id);
