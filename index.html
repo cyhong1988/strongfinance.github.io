@@ -76,7 +76,7 @@
                 </div>
                 <div class="flex flex-col items-center md:items-end mt-2">
                     <button onclick="saveData()" class="btn-save uppercase">儲存並更新</button>
-                    <div id="last-save-time" class="text-[9px] text-slate-600 mt-2 tracking-widest font-mono">最後更新時間: NEVER</div>
+                    <div id="last-save-time" class="text-[9px] text-slate-600 mt-2 tracking-widest font-mono">最後更新時間: 更新中⋯</div>
                 </div>
             </div>
         </header>
@@ -418,7 +418,7 @@
                 const data = await response.json();
                 if (data && data.income !== undefined) {
                     if (data.lastSave) {
-                        document.getElementById('last-save-time').innerText = `LAST SAVE: ${data.lastSave}`;
+                        document.getElementById('last-save-time').innerText = `最後更新時間: ${data.lastSave}`;
                     }
                     document.getElementById('input-income').value = emptyIfZero(data.income);
                     document.getElementById('input-ammo').value = emptyIfZero(data.ammo);
