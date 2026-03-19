@@ -74,8 +74,10 @@
                     <span class="text-sm text-slate-400 font-mono">TWD</span>
                     <div id="total-assets-display" class="text-4xl font-mono font-bold text-white tracking-tighter">--</div>
                 </div>
-                <br>
-                <button onclick="saveData()" class="btn-save uppercase">儲存並更新</button>
+                <div class="flex flex-col items-center md:items-end mt-2">
+                    <button onclick="saveData()" class="btn-save uppercase">儲存並更新</button>
+                    <div id="last-save-time" class="text-[9px] text-slate-600 mt-2 tracking-widest font-mono">最後更新時間: NEVER</div>
+                </div>
             </div>
         </header>
 
@@ -370,8 +372,19 @@
 
         async function saveData() {
             const status = document.getElementById('sync-status');
+            const timeDisplay = document.getElementById('last-save-time');
             status.innerText = "正在儲存...";
+
+            const now = new Date();
+            const timeString = now.getFullYear() + '/' + 
+                              (now.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                              now.getDate().toString().padStart(2, '0') + ' ' + 
+                              now.getHours().toString().padStart(2, '0') + ':' + 
+                              now.getMinutes().toString().padStart(2, '0') + ':' + 
+                              now.getSeconds().toString().padStart(2, '0');
+
             const data = {
+                lastSave: timeString,
                 income: document.getElementById('input-income').value,
                 ammo: document.getElementById('input-ammo').value,
                 travel: document.getElementById('input-travel').value,
@@ -394,6 +407,7 @@
             try {
                 await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
                 status.innerText = "已儲存雲端";
+                timeDisplay.innerText = `最後更新時間: ${timeString}`;
                 setTimeout(() => status.innerText = "系統連線中", 3000);
             } catch (e) { status.innerText = "儲存失敗"; }
         }
@@ -403,6 +417,9 @@
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
                 if (data && data.income !== undefined) {
+                    if (data.lastSave) {
+                        document.getElementById('last-save-time').innerText = `LAST SAVE: ${data.lastSave}`;
+                    }
                     document.getElementById('input-income').value = emptyIfZero(data.income);
                     document.getElementById('input-ammo').value = emptyIfZero(data.ammo);
                     document.getElementById('input-travel').value = emptyIfZero(data.travel);
