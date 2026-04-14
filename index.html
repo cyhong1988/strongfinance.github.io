@@ -188,16 +188,22 @@
                                 <div class="text-right flex-grow flex justify-end">
                                     <div class="w-48">
                                         <label class="text-[10px] text-slate-500 uppercase block font-bold mb-1">目前總損益 (TWD)</label>
-                                        <input type="number" id="pnl-tw" class="input-field w-full font-mono text-right text-sm" placeholder="TWD" oninput="calculate()">
+                                        <input type="number" id="pnl-tw" class="input-field input-readonly w-full font-mono text-right text-sm" placeholder="自動計算" readonly>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex gap-4 pt-2">
-                                <div class="flex-grow">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                <div>
                                     <label class="text-[10px] text-slate-500 mb-1 block uppercase font-bold">已投入本金 (TWD)</label>
-                                    <input type="number" id="input-tw" class="input-field font-mono" placeholder="請輸入本金" oninput="calculate()">
+                                    <div class="flex gap-2">
+                                        <input type="number" id="input-tw" class="input-field font-mono" placeholder="請輸入本金" oninput="calculate()">
+                                        <button onclick="quickAdd('input-tw', 50000)" class="btn-quick-add whitespace-nowrap px-4 font-semibold">+5萬</button>
+                                    </div>
                                 </div>
-                                <button onclick="quickAdd('input-tw', 50000)" class="btn-quick-add whitespace-nowrap px-8 self-end font-semibold">+ 5萬 (週)</button>
+                                <div>
+                                    <label class="text-[10px] text-amber-500 mb-1 block uppercase font-bold">台股目前市值 (TWD)</label>
+                                    <input type="number" id="input-tw-market" class="input-field font-mono border-amber-500/30 text-amber-400" placeholder="輸入目前市值" oninput="calculate()">
+                                </div>
                             </div>
                             <div class="flex justify-end mb-[-12px]">
                                 <span id="percent-tw" class="text-[10px] font-mono font-bold text-purple-400">0.0%</span>
@@ -281,12 +287,10 @@
             calculate();
         }
 
-        // 當輸入目前市值或本金時觸發
         function calculateWithMarketValue() {
             const principal = parseFloat(document.getElementById('input-us-principal-usd').value) || 0;
             const marketValue = parseFloat(document.getElementById('input-us-market-usd').value) || 0;
             
-            // 自動更新損益 (鎖定的欄位)
             if (marketValue !== 0) {
                 document.getElementById('pnl-us-usd').value = (marketValue - principal).toFixed(2);
             } else {
@@ -296,23 +300,22 @@
         }
 
         function calculate() {
-            // 1. 銀行現金計算
+            // 1. 銀行現金
             let totalBankCash = 0;
             document.querySelectorAll('.bank-amount').forEach(i => {
                 const val = parseFloat(i.value);
                 if (!isNaN(val)) totalBankCash += val;
             });
             document.getElementById('input-cash').value = totalBankCash === 0 ? "" : Math.floor(totalBankCash).toLocaleString();
-
             const cash = totalBankCash;
-            const income = parseFloat(document.getElementById('input-income').value) || 0;
-            
-            // 2. 美股計算邏輯
+
+            // 2. 美股計算
             const usPrincipalUsd = parseFloat(document.getElementById('input-us-principal-usd').value) || 0;
             const pnlUsUsd = parseFloat(document.getElementById('pnl-us-usd').value) || 0;
             const targetUs = parseFloat(document.getElementById('target-us').value) || 2800000;
             
-            const usTotalValueTwd = (usPrincipalUsd + pnlUsUsd) * currentFxRate;
+            const usMarketValueUsd = usPrincipalUsd + pnlUsUsd;
+            const usTotalValueTwd = usMarketValueUsd * currentFxRate;
             const usPrincipalTwd = usPrincipalUsd * currentFxRate; 
             
             const pnlUsDisplay = document.getElementById('pnl-us-twd-display');
@@ -320,16 +323,27 @@
             pnlUsDisplay.className = `text-lg font-mono font-bold ${pnlUsUsd >= 0 ? 'profit' : 'loss'}`;
 
             // 3. 台股計算
-            const tw = parseFloat(document.getElementById('input-tw').value) || 0;
-            const pnlTw = parseFloat(document.getElementById('pnl-tw').value) || 0;
+            const twPrincipal = parseFloat(document.getElementById('input-tw').value) || 0;
+            const twMarket = parseFloat(document.getElementById('input-tw-market').value) || 0;
             const targetTw = parseFloat(document.getElementById('target-tw').value) || 3990000;
-            const twTotalValueTwd = tw + pnlTw;
+            
+            let twPnl = 0;
+            if (twMarket !== 0) {
+                twPnl = twMarket - twPrincipal;
+                document.getElementById('pnl-tw').value = twPnl;
+            } else {
+                document.getElementById('pnl-tw').value = "";
+            }
+            
+            const pnlTwInput = document.getElementById('pnl-tw');
+            pnlTwInput.className = `input-field input-readonly w-full font-mono text-right text-sm ${twPnl >= 0 ? 'profit' : 'loss'}`;
 
-            // 4. 當前總資產 (現金 + 台股總市值 + 美股總市值)
-            const totalAssets = cash + twTotalValueTwd + usTotalValueTwd;
+            // 4. 當前總資產 (現金 + 台股市值 + 美股市值TWD)
+            const totalAssets = cash + twMarket + usTotalValueTwd;
             document.getElementById('total-assets-display').innerText = totalAssets === 0 ? "--" : Math.floor(totalAssets).toLocaleString();
 
             // 5. 收支計算
+            const income = parseFloat(document.getElementById('input-income').value) || 0;
             let totalExp = 0;
             document.querySelectorAll('.exp-amount').forEach(i => {
                 const val = parseFloat(i.value);
@@ -349,7 +363,6 @@
                 gapDisplay.innerText = "0";
                 gapDisplay.className = "text-2xl font-mono font-bold text-slate-400";
             }
-
             document.getElementById('annual-expense-display').innerText = totalExp === 0 ? "--" : (totalExp * 12).toLocaleString();
 
             // 6. 生存年限
@@ -370,12 +383,12 @@
                 document.getElementById('survival-result').className = totalMonths < 6 ? "text-2xl font-mono font-bold loss" : "text-2xl font-mono font-bold text-white";
             }
 
-            // 7. 進度計算
-            const twRatio = Math.min((tw / targetTw) * 100, 100);
+            // 7. 進度
+            const twRatio = Math.min((twPrincipal / targetTw) * 100, 100);
             document.getElementById('percent-tw').innerText = twRatio.toFixed(1) + "%";
             document.getElementById('bar-tw').style.width = twRatio + "%";
-            const twWeeks = Math.max(0, Math.ceil((targetTw - tw) / 50000));
-            document.getElementById('tw-time-result').innerText = tw === 0 ? "--" : formatTime(twWeeks);
+            const twWeeks = Math.max(0, Math.ceil((targetTw - twPrincipal) / 50000));
+            document.getElementById('tw-time-result').innerText = twPrincipal === 0 ? "--" : formatTime(twWeeks);
 
             const usRatio = Math.min((usPrincipalTwd / targetUs) * 100, 100);
             document.getElementById('percent-us').innerText = usRatio.toFixed(1) + "%";
@@ -400,6 +413,7 @@
                 usPrincipalUsd: document.getElementById('input-us-principal-usd').value,
                 usMarketUsd: document.getElementById('input-us-market-usd').value,
                 tw: document.getElementById('input-tw').value,
+                twMarket: document.getElementById('input-tw-market').value,
                 targetUs: document.getElementById('target-us').value,
                 targetTw: document.getElementById('target-tw').value,
                 pnlUsUsd: document.getElementById('pnl-us-usd').value,
@@ -433,6 +447,7 @@
                     document.getElementById('input-us-principal-usd').value = emptyIfZero(data.usPrincipalUsd);
                     document.getElementById('input-us-market-usd').value = emptyIfZero(data.usMarketUsd);
                     document.getElementById('input-tw').value = emptyIfZero(data.tw);
+                    document.getElementById('input-tw-market').value = emptyIfZero(data.twMarket);
                     document.getElementById('target-us').value = data.targetUs || 2800000;
                     document.getElementById('target-tw').value = data.targetTw || 3990000;
                     document.getElementById('pnl-us-usd').value = emptyIfZero(data.pnlUsUsd);
