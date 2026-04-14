@@ -153,7 +153,7 @@
                                 <div class="flex gap-6 items-center flex-grow justify-end">
                                     <div class="text-right">
                                         <label class="text-[10px] text-slate-500 uppercase block font-bold mb-1">損益 (USD)</label>
-                                        <input type="number" id="pnl-us-usd" class="input-field w-28 font-mono text-right text-sm" placeholder="USD" step="0.01" oninput="calculate()">
+                                        <input type="number" id="pnl-us-usd" class="input-field input-readonly w-28 font-mono text-right text-sm" placeholder="自動計算" step="0.01" readonly>
                                     </div>
                                     <div class="text-right border-l border-white/10 pl-6 min-w-[110px]">
                                         <label class="text-[10px] text-slate-500 uppercase block font-bold mb-1">美股總市值 (TWD)</label>
@@ -163,13 +163,12 @@
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                                 <div>
-                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase font-bold">美股配置金額 (USD)</label>
-                                    <input type="number" id="input-us-principal-usd" class="input-field font-mono text-blue-400" placeholder="請輸入美金本金" oninput="calculate()">
-                                    <p class="text-[9px] text-slate-500 mt-1">此金額將與損益加總後換算匯率</p>
+                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase font-bold">美股配置金額 (USD 本金)</label>
+                                    <input type="number" id="input-us-principal-usd" class="input-field font-mono text-blue-400" placeholder="本金" oninput="calculateWithMarketValue()">
                                 </div>
-                                <div class="opacity-50 pointer-events-none">
-                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">輔助資訊</label>
-                                    <div class="text-xs text-slate-400 font-mono mt-2">連動全球市場數據更新中</div>
+                                <div>
+                                    <label class="text-[10px] text-amber-500 mb-1 block uppercase font-bold">美股目前市值 (USD)</label>
+                                    <input type="number" id="input-us-market-usd" class="input-field font-mono border-amber-500/30 text-amber-400" placeholder="輸入目前市值" oninput="calculateWithMarketValue()">
                                 </div>
                             </div>
                             <div class="flex justify-end mb-[-12px]">
@@ -195,7 +194,7 @@
                             </div>
                             <div class="flex gap-4 pt-2">
                                 <div class="flex-grow">
-                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase">已投入本金 (TWD)</label>
+                                    <label class="text-[10px] text-slate-500 mb-1 block uppercase font-bold">已投入本金 (TWD)</label>
                                     <input type="number" id="input-tw" class="input-field font-mono" placeholder="請輸入本金" oninput="calculate()">
                                 </div>
                                 <button onclick="quickAdd('input-tw', 50000)" class="btn-quick-add whitespace-nowrap px-8 self-end font-semibold">+ 5萬 (週)</button>
@@ -282,6 +281,20 @@
             calculate();
         }
 
+        // 當輸入目前市值或本金時觸發
+        function calculateWithMarketValue() {
+            const principal = parseFloat(document.getElementById('input-us-principal-usd').value) || 0;
+            const marketValue = parseFloat(document.getElementById('input-us-market-usd').value) || 0;
+            
+            // 自動更新損益 (鎖定的欄位)
+            if (marketValue !== 0) {
+                document.getElementById('pnl-us-usd').value = (marketValue - principal).toFixed(2);
+            } else {
+                document.getElementById('pnl-us-usd').value = "";
+            }
+            calculate();
+        }
+
         function calculate() {
             // 1. 銀行現金計算
             let totalBankCash = 0;
@@ -294,13 +307,13 @@
             const cash = totalBankCash;
             const income = parseFloat(document.getElementById('input-income').value) || 0;
             
-            // 2. 美股計算邏輯 (本金 USD + 損益 USD) * 匯率
+            // 2. 美股計算邏輯
             const usPrincipalUsd = parseFloat(document.getElementById('input-us-principal-usd').value) || 0;
             const pnlUsUsd = parseFloat(document.getElementById('pnl-us-usd').value) || 0;
             const targetUs = parseFloat(document.getElementById('target-us').value) || 2800000;
             
             const usTotalValueTwd = (usPrincipalUsd + pnlUsUsd) * currentFxRate;
-            const usPrincipalTwd = usPrincipalUsd * currentFxRate; // 用於進度條計算 (以本金為主)
+            const usPrincipalTwd = usPrincipalUsd * currentFxRate; 
             
             const pnlUsDisplay = document.getElementById('pnl-us-twd-display');
             pnlUsDisplay.innerText = usTotalValueTwd === 0 ? "--" : Math.floor(usTotalValueTwd).toLocaleString();
@@ -367,7 +380,6 @@
             const usRatio = Math.min((usPrincipalTwd / targetUs) * 100, 100);
             document.getElementById('percent-us').innerText = usRatio.toFixed(1) + "%";
             document.getElementById('bar-us').style.width = usRatio + "%";
-            // 假設美股每週投入約 2000 USD (約 6.5萬 TWD)
             const usWeeks = Math.max(0, Math.ceil((targetUs - usPrincipalTwd) / 65000));
             document.getElementById('us-time-result').innerText = usPrincipalUsd === 0 ? "--" : formatTime(usWeeks);
         }
@@ -386,6 +398,7 @@
                 ammo: document.getElementById('input-ammo').value,
                 travel: document.getElementById('input-travel').value,
                 usPrincipalUsd: document.getElementById('input-us-principal-usd').value,
+                usMarketUsd: document.getElementById('input-us-market-usd').value,
                 tw: document.getElementById('input-tw').value,
                 targetUs: document.getElementById('target-us').value,
                 targetTw: document.getElementById('target-tw').value,
@@ -418,6 +431,7 @@
                     document.getElementById('input-ammo').value = emptyIfZero(data.ammo);
                     document.getElementById('input-travel').value = emptyIfZero(data.travel);
                     document.getElementById('input-us-principal-usd').value = emptyIfZero(data.usPrincipalUsd);
+                    document.getElementById('input-us-market-usd').value = emptyIfZero(data.usMarketUsd);
                     document.getElementById('input-tw').value = emptyIfZero(data.tw);
                     document.getElementById('target-us').value = data.targetUs || 2800000;
                     document.getElementById('target-tw').value = data.targetTw || 3990000;
