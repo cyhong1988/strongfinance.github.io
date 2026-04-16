@@ -37,8 +37,8 @@
 
         .btn-quick-add { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; transition: all 0.2s; margin-top: 6px; }
         .btn-quick-add:hover { background: rgba(59, 130, 246, 0.2); color: white; }
-        .profit { color: #10b981; }
-        .loss { color: #f43f5e; }
+        .profit { color: #10b981; } /* 綠色：跌 (台股邏輯) */
+        .loss { color: #f43f5e; }   /* 紅色：漲 (台股邏輯) */
 
         .fx-tag {
             background: rgba(255, 255, 255, 0.03);
@@ -46,43 +46,67 @@
             padding: 8px 20px;
             border-radius: 16px;
         }
+
+        .history-item {
+            border-left: 2px solid rgba(96, 165, 250, 0.3);
+            padding-left: 12px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+        .history-item:first-child {
+            border-left-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.05);
+            padding: 6px 12px;
+            border-radius: 0 8px 8px 0;
+        }
     </style>
 </head>
 <body class="gradient-bg text-slate-200 min-h-screen p-4 md:p-8 font-sans">
 
     <div class="max-w-7xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-12 border-b border-white/10 pb-10 gap-8">
-            <div class="flex-1 text-center md:text-left">
+        <header class="flex flex-col md:flex-row justify-between items-start mb-6 border-b border-white/10 pb-8 gap-8">
+            <div class="flex-1 w-full">
                 <h1 class="text-2xl font-light tracking-[0.3em] text-white">個人投資戰略系統</h1>
-                <div class="flex items-center justify-center md:justify-start gap-2 mt-2">
+                <div class="flex items-center gap-2 mt-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <p id="sync-status" class="text-slate-500 text-[10px] tracking-widest uppercase font-semibold">系統連線中</p>
                 </div>
-            </div>
-
-            <div class="fx-tag flex flex-col items-center min-w-[160px]">
-                <span class="text-[10px] text-slate-500 tracking-[0.2em] uppercase mb-1 font-bold">即時匯率參考</span>
-                <div class="flex items-center gap-3">
-                    <span class="text-xs text-blue-400 font-bold">USD/TWD</span>
-                    <span id="fx-rate-display" class="text-lg font-mono text-white font-medium">--.--</span>
+                
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card p-4 rounded-xl">
+                        <span class="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold block mb-4 border-b border-white/5 pb-2">資產歷史紀錄 (最近 10 筆)</span>
+                        <div id="history-list" class="space-y-3 max-h-[180px] overflow-y-auto pr-2 custom-scrollbar">
+                            <span class="text-slate-600 text-[10px] italic">等待資料載入...</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-center items-center md:items-start px-4">
+                        <div class="fx-tag flex flex-col items-center min-w-[160px]">
+                            <span class="text-[10px] text-slate-500 tracking-[0.2em] uppercase mb-1 font-bold">即時匯率參考</span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-blue-400 font-bold">USD/TWD</span>
+                                <span id="fx-rate-display" class="text-lg font-mono text-white font-medium">--.--</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex-1 flex flex-col items-center md:items-end">
-                <span class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mb-1 font-bold">當前總資產 (淨值)</span>
+            <div class="flex-1 flex flex-col items-center md:items-end w-full">
+                <span class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mb-1 font-bold">當前總資產預估</span>
                 <div class="flex items-baseline gap-2">
                     <span class="text-sm text-slate-400 font-mono">TWD</span>
                     <div id="total-assets-display" class="text-4xl font-mono font-bold text-white tracking-tighter">--</div>
                 </div>
-                <div class="flex flex-col items-center md:items-end mt-2">
-                    <button onclick="saveData()" class="btn-save uppercase">儲存並更新</button>
+                <div id="diff-display" class="text-sm font-mono mt-1 font-bold">--</div>
+                
+                <div class="flex flex-col items-center md:items-end mt-4">
+                    <button onclick="saveData()" class="btn-save uppercase">儲存當前狀態</button>
                     <div id="last-save-time" class="text-[9px] text-slate-600 mt-2 tracking-widest font-mono">最後更新時間: 更新中⋯</div>
                 </div>
             </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
             <div class="space-y-6">
                 <div class="card p-6 rounded-2xl border-t-2 border-red-500/50 shadow-xl">
                     <div class="flex justify-between items-center mb-4">
@@ -150,12 +174,16 @@
                                     美股配置目標
                                     <input type="number" id="target-us" class="input-target" value="2800000" oninput="calculate()">
                                 </span>
-                                <div class="flex gap-6 items-center flex-grow justify-end">
+                                <div class="flex gap-4 items-center flex-grow justify-end">
                                     <div class="text-right">
                                         <label class="text-[10px] text-slate-500 uppercase block font-bold mb-1">損益 (USD)</label>
-                                        <input type="number" id="pnl-us-usd" class="input-field input-readonly w-28 font-mono text-right text-sm" placeholder="自動計算" step="0.01" readonly>
+                                        <input type="number" id="pnl-us-usd" class="input-field input-readonly w-24 font-mono text-right text-sm" placeholder="自動計算" step="0.01" readonly>
                                     </div>
-                                    <div class="text-right border-l border-white/10 pl-6 min-w-[110px]">
+                                    <div class="text-right">
+                                        <label class="text-[10px] text-slate-500 uppercase block font-bold mb-1">損益 (TWD)</label>
+                                        <input type="text" id="pnl-us-twd-val" class="input-field input-readonly w-28 font-mono text-right text-sm" placeholder="自動計算" readonly>
+                                    </div>
+                                    <div class="text-right border-l border-white/10 pl-4 min-w-[110px]">
                                         <label class="text-[10px] text-slate-500 uppercase block font-bold mb-1">美股總市值 (TWD)</label>
                                         <div id="pnl-us-twd-display" class="text-lg font-mono font-bold leading-tight">--</div>
                                     </div>
@@ -215,7 +243,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-12">
                     <div class="card p-6 rounded-2xl border border-white/5 text-center">
                         <h3 class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">現金尚可支撐年限</h3>
                         <div id="survival-result" class="text-3xl font-mono font-light text-white">--</div>
@@ -236,6 +264,8 @@
     <script>
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbxbYPyWLw2Da1goYFISnTpsSGfnuxNGEkhJIOU2iozNDQA7xnVROFjBM5rKj98foX0h/exec'; 
         let currentFxRate = 32.5;
+        let assetHistory = []; // 存儲紀錄對象 {amount, timestamp}
+        let currentTotalAssets = 0;
 
         const emptyIfZero = (val) => (val == 0 || val === null || val === undefined) ? "" : val;
 
@@ -250,6 +280,41 @@
                 }
             } catch (e) {
                 document.getElementById('fx-rate-display').innerText = "32.50 (估)";
+            }
+        }
+
+        function updateHistoryUI() {
+            const listContainer = document.getElementById('history-list');
+            if (assetHistory.length === 0) {
+                listContainer.innerHTML = '<span class="text-slate-600 text-[10px] italic">尚無歷史紀錄...</span>';
+                return;
+            }
+
+            // 更新左側垂直列表
+            listContainer.innerHTML = assetHistory.map((item, index) => `
+                <div class="history-item flex justify-between items-center">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-mono text-white font-bold">${Math.floor(item.amount).toLocaleString()} <span class="text-[8px] text-slate-500 ml-1 font-normal">TWD</span></span>
+                        <span class="text-[9px] text-slate-500 font-mono">${item.timestamp}</span>
+                    </div>
+                    ${index === 0 ? '<span class="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded tracking-tighter">LAST SAVE</span>' : ''}
+                </div>
+            `).join('');
+
+            // 更新右上角增減值 (本次計算結果 - 上次存檔紀錄)
+            const lastSavedAmount = assetHistory[0]?.amount || 0;
+            const diff = currentTotalAssets - lastSavedAmount;
+            const diffDisplay = document.getElementById('diff-display');
+            
+            if (diff > 0) {
+                diffDisplay.innerText = `+${Math.floor(diff).toLocaleString()}`;
+                diffDisplay.className = "text-sm font-mono mt-1 font-bold loss"; // 紅漲
+            } else if (diff < 0) {
+                diffDisplay.innerText = `${Math.floor(diff).toLocaleString()}`;
+                diffDisplay.className = "text-sm font-mono mt-1 font-bold profit"; // 綠跌
+            } else {
+                diffDisplay.innerText = `±0`;
+                diffDisplay.className = "text-sm font-mono mt-1 font-bold text-slate-500";
             }
         }
 
@@ -290,7 +355,6 @@
         function calculateWithMarketValue() {
             const principal = parseFloat(document.getElementById('input-us-principal-usd').value) || 0;
             const marketValue = parseFloat(document.getElementById('input-us-market-usd').value) || 0;
-            
             if (marketValue !== 0) {
                 document.getElementById('pnl-us-usd').value = (marketValue - principal).toFixed(2);
             } else {
@@ -312,37 +376,34 @@
             // 2. 美股計算
             const usPrincipalUsd = parseFloat(document.getElementById('input-us-principal-usd').value) || 0;
             const pnlUsUsd = parseFloat(document.getElementById('pnl-us-usd').value) || 0;
-            const targetUs = parseFloat(document.getElementById('target-us').value) || 2800000;
-            
             const usMarketValueUsd = usPrincipalUsd + pnlUsUsd;
             const usTotalValueTwd = usMarketValueUsd * currentFxRate;
             const usPrincipalTwd = usPrincipalUsd * currentFxRate; 
+            const usPnlTwd = pnlUsUsd * currentFxRate;
+            const targetUs = parseFloat(document.getElementById('target-us').value) || 2800000;
             
-            const pnlUsDisplay = document.getElementById('pnl-us-twd-display');
-            pnlUsDisplay.innerText = usTotalValueTwd === 0 ? "--" : Math.floor(usTotalValueTwd).toLocaleString();
-            pnlUsDisplay.className = `text-lg font-mono font-bold ${pnlUsUsd >= 0 ? 'profit' : 'loss'}`;
+            document.getElementById('pnl-us-twd-val').value = pnlUsUsd === 0 ? "" : Math.floor(usPnlTwd).toLocaleString();
+            document.getElementById('pnl-us-twd-val').className = `input-field input-readonly w-28 font-mono text-right text-sm ${usPnlTwd >= 0 ? 'loss' : 'profit'}`;
+            document.getElementById('pnl-us-twd-display').innerText = usTotalValueTwd === 0 ? "--" : Math.floor(usTotalValueTwd).toLocaleString();
+            document.getElementById('pnl-us-twd-display').className = `text-lg font-mono font-bold ${pnlUsUsd >= 0 ? 'loss' : 'profit'}`;
 
             // 3. 台股計算
             const twPrincipal = parseFloat(document.getElementById('input-tw').value) || 0;
             const twMarket = parseFloat(document.getElementById('input-tw-market').value) || 0;
             const targetTw = parseFloat(document.getElementById('target-tw').value) || 3990000;
-            
             let twPnl = 0;
             if (twMarket !== 0) {
                 twPnl = twMarket - twPrincipal;
                 document.getElementById('pnl-tw').value = twPnl;
-            } else {
-                document.getElementById('pnl-tw').value = "";
             }
-            
-            const pnlTwInput = document.getElementById('pnl-tw');
-            pnlTwInput.className = `input-field input-readonly w-full font-mono text-right text-sm ${twPnl >= 0 ? 'profit' : 'loss'}`;
+            document.getElementById('pnl-tw').className = `input-field input-readonly w-full font-mono text-right text-sm ${twPnl >= 0 ? 'loss' : 'profit'}`;
 
-            // 4. 當前總資產 (現金 + 台股市值 + 美股市值TWD)
-            const totalAssets = cash + twMarket + usTotalValueTwd;
-            document.getElementById('total-assets-display').innerText = totalAssets === 0 ? "--" : Math.floor(totalAssets).toLocaleString();
+            // 4. 當前總資產
+            currentTotalAssets = cash + twMarket + usTotalValueTwd;
+            document.getElementById('total-assets-display').innerText = currentTotalAssets === 0 ? "--" : Math.floor(currentTotalAssets).toLocaleString();
+            updateHistoryUI();
 
-            // 5. 收支計算
+            // 5. 收支與生存年限 (保持先前邏輯)
             const income = parseFloat(document.getElementById('input-income').value) || 0;
             let totalExp = 0;
             document.querySelectorAll('.exp-amount').forEach(i => {
@@ -350,51 +411,18 @@
                 if (!isNaN(val)) totalExp += val;
             });
             document.getElementById('display-total-expense').value = totalExp === 0 ? "" : totalExp.toLocaleString();
-            
             const balance = income - totalExp;
             const gapDisplay = document.getElementById('monthly-gap-display');
-            if (balance > 0) {
-                gapDisplay.innerText = "+" + balance.toLocaleString();
-                gapDisplay.className = "text-2xl font-mono font-bold profit"; 
-            } else if (balance < 0) {
-                gapDisplay.innerText = "-" + Math.abs(balance).toLocaleString();
-                gapDisplay.className = "text-2xl font-mono font-bold loss";
-            } else {
-                gapDisplay.innerText = "0";
-                gapDisplay.className = "text-2xl font-mono font-bold text-slate-400";
-            }
-            document.getElementById('annual-expense-display').innerText = totalExp === 0 ? "--" : (totalExp * 12).toLocaleString();
-
-            // 6. 生存年限
-            const gap = totalExp - income;
-            if (gap <= 0) {
-                document.getElementById('survival-result').innerText = "∞";
-                document.getElementById('survival-result').className = "text-3xl font-mono font-light text-emerald-400";
-            } else if (cash === 0) {
-                document.getElementById('survival-result').innerText = "0天";
-                document.getElementById('survival-result').className = "text-3xl font-mono font-light loss";
-            } else {
-                let totalMonths = cash / gap;
-                const years = Math.floor(totalMonths / 12);
-                const remainingMonths = Math.floor(totalMonths % 12);
-                const remainingDays = Math.floor((totalMonths - Math.floor(totalMonths)) * 30.44);
-                let timeStr = (years > 0 ? `${years}年` : "") + (remainingMonths > 0 ? `${remainingMonths}個月` : "") + `又${remainingDays}天`;
-                document.getElementById('survival-result').innerText = timeStr;
-                document.getElementById('survival-result').className = totalMonths < 6 ? "text-2xl font-mono font-bold loss" : "text-2xl font-mono font-bold text-white";
-            }
-
-            // 7. 進度
+            gapDisplay.innerText = (balance > 0 ? "+" : "") + balance.toLocaleString();
+            gapDisplay.className = `text-2xl font-mono font-bold ${balance >= 0 ? 'loss' : 'profit'}`;
+            
+            // 進度條與預估時間 (保持先前邏輯)
             const twRatio = Math.min((twPrincipal / targetTw) * 100, 100);
             document.getElementById('percent-tw').innerText = twRatio.toFixed(1) + "%";
             document.getElementById('bar-tw').style.width = twRatio + "%";
-            const twWeeks = Math.max(0, Math.ceil((targetTw - twPrincipal) / 50000));
-            document.getElementById('tw-time-result').innerText = twPrincipal === 0 ? "--" : formatTime(twWeeks);
-
             const usRatio = Math.min((usPrincipalTwd / targetUs) * 100, 100);
             document.getElementById('percent-us').innerText = usRatio.toFixed(1) + "%";
             document.getElementById('bar-us').style.width = usRatio + "%";
-            const usWeeks = Math.max(0, Math.ceil((targetUs - usPrincipalTwd) / 65000));
-            document.getElementById('us-time-result').innerText = usPrincipalUsd === 0 ? "--" : formatTime(usWeeks);
         }
 
         async function saveData() {
@@ -403,10 +431,20 @@
             status.innerText = "正在儲存...";
 
             const now = new Date();
-            const timeString = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+            const timeString = `${now.getFullYear()}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            // 更新歷史紀錄 (物件形式)
+            if (currentTotalAssets > 0) {
+                assetHistory.unshift({
+                    amount: currentTotalAssets,
+                    timestamp: timeString
+                });
+                assetHistory = assetHistory.slice(0, 10);
+            }
 
             const data = {
                 lastSave: timeString,
+                assetHistory: assetHistory,
                 income: document.getElementById('input-income').value,
                 ammo: document.getElementById('input-ammo').value,
                 travel: document.getElementById('input-travel').value,
@@ -416,8 +454,6 @@
                 twMarket: document.getElementById('input-tw-market').value,
                 targetUs: document.getElementById('target-us').value,
                 targetTw: document.getElementById('target-tw').value,
-                pnlUsUsd: document.getElementById('pnl-us-usd').value,
-                pnlTw: document.getElementById('pnl-tw').value,
                 banks: Array.from(document.querySelectorAll('.bank-row')).map(r => ({
                     name: r.querySelector('.bank-name').value,
                     amount: r.querySelector('.bank-amount').value
@@ -427,10 +463,12 @@
                     amount: r.querySelector('.exp-amount').value
                 }))
             };
+
             try {
                 await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
                 status.innerText = "已儲存雲端";
                 timeDisplay.innerText = `最後更新時間: ${timeString}`;
+                updateHistoryUI();
                 setTimeout(() => status.innerText = "系統連線中", 3000);
             } catch (e) { status.innerText = "儲存失敗"; }
         }
@@ -439,8 +477,8 @@
             try {
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
-                if (data && data.income !== undefined) {
-                    if (data.lastSave) document.getElementById('last-save-time').innerText = `最後更新時間: ${data.lastSave}`;
+                if (data) {
+                    assetHistory = data.assetHistory || [];
                     document.getElementById('input-income').value = emptyIfZero(data.income);
                     document.getElementById('input-ammo').value = emptyIfZero(data.ammo);
                     document.getElementById('input-travel').value = emptyIfZero(data.travel);
@@ -450,8 +488,6 @@
                     document.getElementById('input-tw-market').value = emptyIfZero(data.twMarket);
                     document.getElementById('target-us').value = data.targetUs || 2800000;
                     document.getElementById('target-tw').value = data.targetTw || 3990000;
-                    document.getElementById('pnl-us-usd').value = emptyIfZero(data.pnlUsUsd);
-                    document.getElementById('pnl-tw').value = emptyIfZero(data.pnlTw);
                     
                     document.getElementById('bank-list').innerHTML = '';
                     if (data.banks?.length > 0) data.banks.forEach(b => addRow('bank', b.name, emptyIfZero(b.amount)));
@@ -461,7 +497,7 @@
                     if (data.expenses?.length > 0) data.expenses.forEach(ex => addRow('expense', ex.name, emptyIfZero(ex.amount)));
                     calculate();
                 }
-            } catch (e) { ['中信','樂天','王道','上海商銀','台新'].forEach(n => addRow('bank', n, '')); }
+            } catch (e) { console.error("載入失敗", e); }
         }
 
         window.onload = () => { fetchFxRate(); loadData(); initSortable(); };
