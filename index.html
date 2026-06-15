@@ -72,13 +72,23 @@
                     <p id="sync-status" class="text-slate-500 text-[10px] tracking-widest uppercase font-semibold">系統連線中</p>
                 </div>
                 
-                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="card p-4 rounded-xl">
                         <span class="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold block mb-4 border-b border-white/5 pb-2">資產歷史紀錄 (最近 10 筆)</span>
                         <div id="history-list" class="space-y-3 max-h-[180px] overflow-y-auto pr-2 custom-scrollbar">
                             <span class="text-slate-600 text-[10px] italic">等待資料載入...</span>
                         </div>
                     </div>
+
+                    <div class="card p-4 rounded-xl flex flex-col justify-between border-t-2 border-amber-500/40">
+                        <div>
+                            <span class="text-[10px] text-amber-500 uppercase tracking-[0.2em] font-bold block mb-4 border-b border-white/5 pb-2">資產歷史新高紀錄</span>
+                            <div id="high-record-display" class="flex flex-col justify-center min-h-[60px] py-2">
+                                <span class="text-slate-600 text-[10px] italic">計算中...</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex flex-col justify-center items-center md:items-start px-4">
                         <div class="fx-tag flex flex-col items-center min-w-[160px]">
                             <span class="text-[10px] text-slate-500 tracking-[0.2em] uppercase mb-1 font-bold">即時匯率參考</span>
@@ -239,6 +249,9 @@
         let currentFxRate = 32.5;
         let assetHistory = []; 
         let currentTotalAssets = 0;
+        
+        // 核心修正：建立獨立的「歷史最高紀錄儲存欄位」（預設皆為空）
+        let maxAssetRecord = { amount: 0, timestamp: '' };
 
         const emptyIfZero = (val) => (val == 0 || val === null || val === undefined) ? "" : val;
 
@@ -256,33 +269,60 @@
             }
         }
 
-        // 歷史紀錄更新 UI 邏輯
+        // 修改區塊：優化後的更新歷史紀錄與「永久歷史新高」UI 邏輯
         function updateHistoryUI() {
             const listContainer = document.getElementById('history-list');
+            const highContainer = document.getElementById('high-record-display');
+
+            // 1. 處理最近 10 筆歷史紀錄顯示
             if (!assetHistory || assetHistory.length === 0) {
                 listContainer.innerHTML = '<span class="text-slate-600 text-[10px] italic">尚無歷史紀錄...</span>';
-                return;
+            } else {
+                listContainer.innerHTML = assetHistory.map((item, index) => `
+                    <div class="history-item flex justify-between items-center">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-mono text-white font-bold">${Math.floor(item.amount).toLocaleString()} <span class="text-[8px] text-slate-500 ml-1 font-normal">TWD</span></span>
+                            <span class="text-[9px] text-slate-500 font-mono">${item.timestamp}</span>
+                        </div>
+                        ${index === 0 ? '<span class="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded tracking-tighter">最新</span>' : ''}
+                    </div>`).join('');
             }
-            listContainer.innerHTML = assetHistory.map((item, index) => `
-                <div class="history-item flex justify-between items-center">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-mono text-white font-bold">${Math.floor(item.amount).toLocaleString()} <span class="text-[8px] text-slate-500 ml-1 font-normal">TWD</span></span>
-                        <span class="text-[9px] text-slate-500 font-mono">${item.timestamp}</span>
-                    </div>
-                    ${index === 0 ? '<span class="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded tracking-tighter">最新</span>' : ''}
-                </div>`).join('');
 
-            // 計算與上一次儲存的差值
+            // 2. 進行最高紀錄的比對與顯示
+            // 如果此時「當前實時資產」超越了資料庫中永久紀錄的最高金額
+            const isCurrentTotalHigh = currentTotalAssets > maxAssetRecord.amount;
+            
+            // 決定畫面上要顯示的金額與時間資訊
+            const displayAmount = isCurrentTotalHigh ? currentTotalAssets : maxAssetRecord.amount;
+            const displayTime = isCurrentTotalHigh ? '✨ 刷新當前估算新高' : `📅 達標時間: ${maxAssetRecord.timestamp || '未紀錄'}`;
+
+            if (displayAmount === 0) {
+                highContainer.innerHTML = '<span class="text-slate-600 text-[10px] italic">暫無資產資料...</span>';
+            } else {
+                highContainer.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-xl font-mono text-amber-400 font-bold tracking-tight">
+                            ${Math.floor(displayAmount).toLocaleString()} 
+                            <span class="text-xs text-slate-500 ml-1 font-normal">TWD</span>
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-mono mt-1">
+                            ${displayTime}
+                        </span>
+                    </div>
+                `;
+            }
+
+            // 3. 計算與上一次儲存的差值
             if (assetHistory.length > 0) {
                 const lastSaved = assetHistory[0].amount;
                 const diff = currentTotalAssets - lastSaved;
                 const diffDisplay = document.getElementById('diff-display');
                 if (diff > 0) {
                     diffDisplay.innerText = `+${Math.floor(diff).toLocaleString()}`;
-                    diffDisplay.className = "text-sm font-mono mt-1 font-bold loss"; // 紅色 (漲)
+                    diffDisplay.className = "text-sm font-mono mt-1 font-bold loss"; 
                 } else if (diff < 0) {
                     diffDisplay.innerText = `${Math.floor(diff).toLocaleString()}`;
-                    diffDisplay.className = "text-sm font-mono mt-1 font-bold profit"; // 綠色 (跌)
+                    diffDisplay.className = "text-sm font-mono mt-1 font-bold profit"; 
                 } else {
                     diffDisplay.innerText = "±0";
                     diffDisplay.className = "text-sm font-mono mt-1 font-bold text-slate-500";
@@ -361,7 +401,10 @@
             currentTotalAssets = totalBankCash + twMarket + usTotalValueTwd;
             document.getElementById('total-assets-display').innerText = currentTotalAssets === 0 ? "--" : Math.floor(currentTotalAssets).toLocaleString();
             
-            // 進度條與收支彙整邏輯保持原樣...
+            // 觸發 UI 試算比對
+            updateHistoryUI();
+
+            // 進度條與收支彙整邏輯
             const targetUs = parseFloat(document.getElementById('target-us').value) || 2800000;
             const targetTw = parseFloat(document.getElementById('target-tw').value) || 3990000;
             document.getElementById('bar-us').style.width = Math.min(((usPrincipalUsd * currentFxRate) / targetUs) * 100, 100) + "%";
@@ -388,18 +431,27 @@
             const now = new Date();
             const timeString = `${now.getFullYear()}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
-            // 關鍵更新：紀錄歷史資料，並保持最新 10 筆
+            // 修改區塊：在儲存前先對比。如果最新資產 > 資料庫的新高紀錄，才進行替換
+            if (currentTotalAssets > maxAssetRecord.amount) {
+                maxAssetRecord = {
+                    amount: currentTotalAssets,
+                    timestamp: timeString
+                };
+            }
+
+            // 紀錄歷史資料，並保持最新 10 筆
             if (currentTotalAssets > 0) {
                 assetHistory.unshift({
                     amount: currentTotalAssets,
                     timestamp: timeString
                 });
-                assetHistory = assetHistory.slice(0, 10); // 只保留最近 10 筆
+                assetHistory = assetHistory.slice(0, 10);
             }
 
             const data = {
                 lastSave: timeString,
-                assetHistory: assetHistory, // 傳送歷史陣列
+                assetHistory: assetHistory, 
+                maxAssetRecord: maxAssetRecord, // 核心修正：將永久新高紀錄傳回後端儲存
                 income: document.getElementById('input-income').value,
                 ammo: document.getElementById('input-ammo').value,
                 travel: document.getElementById('input-travel').value,
@@ -420,11 +472,10 @@
             };
 
             try {
-                // 發送到 Google Apps Script
                 await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
                 status.innerText = "已儲存";
                 timeDisplay.innerText = `最後更新時間: ${timeString}`;
-                updateHistoryUI(); // 儲存後立即更新介面
+                updateHistoryUI(); 
                 setTimeout(() => status.innerText = "系統連線中", 2000);
             } catch (e) { status.innerText = "儲存失敗"; }
         }
@@ -434,9 +485,16 @@
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
                 if (data) {
-                    // 載入歷史紀錄陣列
                     assetHistory = data.assetHistory || [];
                     
+                    // 核心修正：載入雲端儲存的永久歷史最高點紀錄
+                    // 為了防止舊有的 GAS 資料中還沒有這個欄位，若無則從現有歷史中抓最大值初始化
+                    if (data.maxAssetRecord) {
+                        maxAssetRecord = data.maxAssetRecord;
+                    } else if (assetHistory.length > 0) {
+                        maxAssetRecord = assetHistory.reduce((max, item) => item.amount > max.amount ? item : max, assetHistory[0]);
+                    }
+
                     document.getElementById('input-income').value = emptyIfZero(data.income);
                     document.getElementById('input-ammo').value = emptyIfZero(data.ammo);
                     document.getElementById('input-travel').value = emptyIfZero(data.travel);
@@ -453,7 +511,7 @@
                     document.getElementById('expense-list').innerHTML = '';
                     if (data.expenses?.length > 0) data.expenses.forEach(ex => addRow('expense', ex.name, ex.amount));
                     
-                    updateHistoryUI(); // 載入時更新 UI
+                    updateHistoryUI(); 
                     calculateWithMarketValue(); 
                 }
             } catch (e) { console.error("載入失敗", e); }
