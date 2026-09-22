@@ -257,7 +257,17 @@
         <!-- ======================= -->
         <!-- 第二分頁：財務指標計算器 -->
         <!-- ======================= -->
-        <div id="pane-2" class="hidden">
+        <div id="pane-2" class="hidden relative">
+            
+            <!-- 新增的獨立儲存狀態列與按鈕 -->
+            <div class="flex justify-between items-center bg-slate-900/50 p-4 rounded-xl mb-6 border border-white/10">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="calc-sync-status" class="text-slate-400 text-xs tracking-widest font-mono">系統連線中</span>
+                </div>
+                <button onclick="saveData()" class="btn-save !mt-0 !py-2 uppercase">儲存財務指標</button>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- 第一欄：不動產與負債 -->
                 <div class="space-y-6">
@@ -265,7 +275,7 @@
                     <div class="card p-6 rounded-2xl border-t-2 border-blue-500/50 shadow-xl">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">不動產清單</h2>
-                            <span class="text-sm font-mono text-blue-400 font-bold">總計: <span id="calc-re-total">0</span> 萬</span>
+                            <span class="text-sm font-mono text-blue-400 font-bold">總計: <span id="calc-re-total">0</span></span>
                         </div>
                         <div id="calc-re-container" class="space-y-2">
                             <!-- 預設項目由JS動態帶入 -->
@@ -277,7 +287,7 @@
                     <div class="card p-6 rounded-2xl border-t-2 border-red-500/50 shadow-xl">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">負債清單</h2>
-                            <span class="text-sm font-mono text-red-400 font-bold">總計: <span id="calc-debt-total">0</span> 萬</span>
+                            <span class="text-sm font-mono text-red-400 font-bold">總計: <span id="calc-debt-total">0</span></span>
                         </div>
                         <div id="calc-debt-container" class="space-y-2">
                             <!-- 預設項目由JS動態帶入 -->
@@ -292,16 +302,16 @@
                     <div class="card p-6 rounded-2xl border-t-2 border-emerald-500/50 shadow-xl">
                         <div class="flex justify-between items-center mb-5">
                             <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">流動資產 (現金與股票)</h2>
-                            <span class="text-sm font-mono text-emerald-400 font-bold">總計: <span id="calc-liquid-total">0</span> 萬</span>
+                            <span class="text-sm font-mono text-emerald-400 font-bold">總計: <span id="calc-liquid-total">0</span></span>
                         </div>
                         <div class="space-y-4">
                             <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                                <label class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">純現金部位 (萬台幣) <span class="bg-emerald-500/20 text-emerald-400 px-1 py-0.5 rounded ml-2 text-[8px]">自動同步</span></label>
-                                <input type="number" id="calc-cash" class="input-field input-readonly w-32 font-mono text-right" value="0" readonly>
+                                <label class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">純現金部位 (台幣) <span class="bg-emerald-500/20 text-emerald-400 px-1 py-0.5 rounded ml-2 text-[8px]">自動同步</span></label>
+                                <input type="number" id="calc-cash" class="input-field input-readonly w-36 font-mono text-right" value="0" readonly>
                             </div>
                             <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                                <label class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">台股部位 (萬台幣) <span class="bg-emerald-500/20 text-emerald-400 px-1 py-0.5 rounded ml-2 text-[8px]">自動同步</span></label>
-                                <input type="number" id="calc-tw-stock" class="input-field input-readonly w-32 font-mono text-right" value="0" readonly>
+                                <label class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">台股部位 (台幣) <span class="bg-emerald-500/20 text-emerald-400 px-1 py-0.5 rounded ml-2 text-[8px]">自動同步</span></label>
+                                <input type="number" id="calc-tw-stock" class="input-field input-readonly w-36 font-mono text-right" value="0" readonly>
                             </div>
                             <div class="flex justify-between items-center pt-1">
                                 <div class="flex flex-col">
@@ -309,8 +319,8 @@
                                     <span class="text-[9px] text-blue-400 mt-1 font-mono" id="calc-rate-info">匯率載入中...</span>
                                 </div>
                                 <div class="flex flex-col items-end gap-1">
-                                    <input type="number" id="calc-us-stock" class="input-field input-readonly w-32 font-mono text-right" value="0" readonly>
-                                    <span class="text-[10px] text-emerald-400 font-mono" id="calc-us-twd-display">約 0 萬台幣</span>
+                                    <input type="number" id="calc-us-stock" class="input-field input-readonly w-36 font-mono text-right" value="0" readonly>
+                                    <span class="text-[10px] text-emerald-400 font-mono" id="calc-us-twd-display">約 0 台幣</span>
                                 </div>
                             </div>
                         </div>
@@ -322,8 +332,8 @@
                             <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">年度開銷</h2>
                         </div>
                         <div class="mt-4">
-                            <label class="text-[10px] text-slate-500 uppercase tracking-wider block mb-2 font-bold">預估年支出 (萬台幣) - 含生活費與貸款本息</label>
-                            <input type="number" id="calc-expenses" class="input-field font-mono text-purple-400 text-lg" value="250" oninput="calcMetrics()">
+                            <label class="text-[10px] text-slate-500 uppercase tracking-wider block mb-2 font-bold">預估年支出 (台幣) - 含生活費與貸款本息</label>
+                            <input type="number" id="calc-expenses" class="input-field font-mono text-purple-400 text-lg" value="2500000" oninput="calcMetrics()">
                         </div>
                     </div>
                 </div>
@@ -365,8 +375,8 @@
     <div id="calc-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden justify-center items-center z-50">
         <div class="card p-6 rounded-2xl w-11/12 max-w-lg border border-white/10 shadow-2xl">
             <h3 class="text-lg font-bold text-white mb-2">智慧匯入資料</h3>
-            <p class="text-xs text-slate-400 mb-4">請將文字貼在下方，系統將自動解析並填入對應的第一筆欄位。</p>
-            <textarea id="calc-import-text" class="input-field h-32 mb-4 resize-none bg-slate-900" placeholder="範例：房產3200，信貸419，年支出250..."></textarea>
+            <p class="text-xs text-slate-400 mb-4">請將文字貼在下方，系統將自動解析並填入對應的第一筆欄位。(請輸入確切數字，勿使用萬)</p>
+            <textarea id="calc-import-text" class="input-field h-32 mb-4 resize-none bg-slate-900" placeholder="範例：房產32000000，信貸4190000，年支出2500000..."></textarea>
             <div class="flex justify-end gap-3">
                 <button onclick="calcCloseModal()" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition">取消</button>
                 <button onclick="calcProcessImport()" class="btn-save !mt-0 !bg-blue-600 !text-white hover:!bg-blue-500">解析並匯入</button>
@@ -541,13 +551,11 @@
             gapDisplay.innerText = (balance > 0 ? "+" : "") + balance.toLocaleString();
             gapDisplay.className = `text-2xl font-mono font-bold ${balance >= 0 ? 'loss' : 'profit'}`;
 
-            // --- 新增：跨分頁自動同步邏輯 ---
-            // 將 Tab1 的數值轉換為「萬」並推播至 Tab2，以維持單向數據連動
-            document.getElementById('calc-cash').value = totalBankCash > 0 ? (totalBankCash / 10000).toFixed(2) : 0;
-            document.getElementById('calc-tw-stock').value = twMarket > 0 ? (twMarket / 10000).toFixed(2) : 0;
+            // --- 新增：跨分頁自動同步邏輯 (保留確切數字) ---
+            document.getElementById('calc-cash').value = totalBankCash > 0 ? totalBankCash : 0;
+            document.getElementById('calc-tw-stock').value = twMarket > 0 ? twMarket : 0;
             document.getElementById('calc-us-stock').value = usMarketValueUsd > 0 ? usMarketValueUsd : 0;
             
-            // 確保觸發第二分頁的指標重算
             if (typeof calcMetrics === 'function') {
                 calcMetrics();
             }
@@ -555,8 +563,11 @@
 
         async function saveData() {
             const status = document.getElementById('sync-status');
+            const calcStatus = document.getElementById('calc-sync-status');
             const timeDisplay = document.getElementById('last-save-time');
+            
             status.innerText = "正在儲存...";
+            if(calcStatus) calcStatus.innerText = "正在儲存...";
 
             const now = new Date();
             const timeString = `${now.getFullYear()}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
@@ -617,10 +628,17 @@
             try {
                 await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
                 status.innerText = "已儲存";
+                if(calcStatus) calcStatus.innerText = "已同步至雲端";
                 timeDisplay.innerText = `最後更新時間: ${timeString}`;
                 updateHistoryUI(); 
-                setTimeout(() => status.innerText = "系統連線中", 2000);
-            } catch (e) { status.innerText = "儲存失敗"; }
+                setTimeout(() => {
+                    status.innerText = "系統連線中";
+                    if(calcStatus) calcStatus.innerText = "系統連線中";
+                }, 2000);
+            } catch (e) { 
+                status.innerText = "儲存失敗"; 
+                if(calcStatus) calcStatus.innerText = "儲存失敗"; 
+            }
         }
 
         async function loadData() {
@@ -666,8 +684,8 @@
                         });
                     } else if (!data.calcRealEstate) {
                         if (typeof calcAddRe === 'function') {
-                            calcAddRe('房產一', '3200');
-                            calcAddRe('房產二', '2900');
+                            calcAddRe('房產一', '32000000');
+                            calcAddRe('房產二', '29000000');
                         }
                     }
 
@@ -678,8 +696,8 @@
                         });
                     } else if (!data.calcDebts) {
                         if (typeof calcAddDebt === 'function') {
-                            calcAddDebt('房貸', '4880');
-                            calcAddDebt('信貸', '419');
+                            calcAddDebt('房貸', '48800000');
+                            calcAddDebt('信貸', '4190000');
                         }
                     }
                     
@@ -741,8 +759,8 @@
             const row = document.createElement('div');
             row.className = 'flex gap-2 items-center calc-re-row';
             row.innerHTML = `
-                <input type="text" class="input-field text-xs w-1/2" value="${name}" placeholder="名稱 (例:房產C)">
-                <input type="number" class="input-field calc-re-input font-mono text-right text-xs w-1/2" value="${amount}" placeholder="市值(萬)">
+                <input type="text" class="input-field text-xs w-1/3" value="${name}" placeholder="名稱 (例:房產C)">
+                <input type="number" class="input-field calc-re-input font-mono text-right text-xs w-2/3" value="${amount}" placeholder="市值(確切金額)">
                 <button class="btn-delete" onclick="this.parentElement.remove(); calcMetrics();">✕</button>
             `;
             container.appendChild(row);
@@ -753,8 +771,8 @@
             const row = document.createElement('div');
             row.className = 'flex gap-2 items-center calc-debt-row';
             row.innerHTML = `
-                <input type="text" class="input-field text-xs w-1/2" value="${name}" placeholder="名稱 (例:車貸)">
-                <input type="number" class="input-field calc-debt-input font-mono text-right text-xs w-1/2" value="${amount}" placeholder="金額(萬)">
+                <input type="text" class="input-field text-xs w-1/3" value="${name}" placeholder="名稱 (例:車貸)">
+                <input type="number" class="input-field calc-debt-input font-mono text-right text-xs w-2/3" value="${amount}" placeholder="金額(確切金額)">
                 <button class="btn-delete" onclick="this.parentElement.remove(); calcMetrics();">✕</button>
             `;
             container.appendChild(row);
@@ -768,13 +786,13 @@
             document.getElementById('calc-re-total').innerText = reTotal.toLocaleString();
 
             const usStockUsd = parseFloat(document.getElementById('calc-us-stock').value) || 0;
-            const usStockTwdWan = (usStockUsd * calcFxRate) / 10000;
-            document.getElementById('calc-us-twd-display').innerText = `約 ${usStockTwdWan.toFixed(2)} 萬台幣`;
+            const usStockTwd = usStockUsd * calcFxRate;
+            document.getElementById('calc-us-twd-display').innerText = `約 ${Math.floor(usStockTwd).toLocaleString()} 台幣`;
 
             const cash = parseFloat(document.getElementById('calc-cash').value) || 0;
             const twStock = parseFloat(document.getElementById('calc-tw-stock').value) || 0;
-            const liquidTotal = cash + twStock + usStockTwdWan;
-            document.getElementById('calc-liquid-total').innerText = liquidTotal.toLocaleString(undefined, {maximumFractionDigits: 2});
+            const liquidTotal = cash + twStock + usStockTwd;
+            document.getElementById('calc-liquid-total').innerText = Math.floor(liquidTotal).toLocaleString();
 
             let debtTotal = 0;
             document.querySelectorAll('.calc-debt-input').forEach(input => {
