@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>個人投資戰略系統與財務指標</title>
+    <!-- 核心套件 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!-- 第三分頁 EXCEL 匯出專用套件 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
     <style>
+        /* 共用基礎樣式 */
         .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
         .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .input-field { background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: white; padding: 6px 10px; border-radius: 6px; width: 100%; font-size: 0.875rem; }
@@ -15,6 +20,7 @@
         .input-target:focus { outline: none; border-color: #60a5fa; color: white; }
         .btn-delete { color: #ef4444; cursor: pointer; transition: opacity 0.2s; padding: 0 8px; }
         .drag-handle { cursor: grab; color: #475569; font-size: 1.2rem; user-select: none; padding-right: 8px; }
+        .sortable-ghost { opacity: 0.3; background: #3b82f6 !important; }
         
         .btn-save { 
             background: rgba(59, 130, 246, 0.05);
@@ -40,25 +46,42 @@
         .profit { color: #10b981; } 
         .loss { color: #f43f5e; }   
 
-        .fx-tag {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 8px 20px;
-            border-radius: 16px;
-        }
+        .fx-tag { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 20px; border-radius: 16px; }
 
-        .history-item {
-            border-left: 2px solid rgba(96, 165, 250, 0.3);
-            padding-left: 12px;
-            margin-bottom: 8px;
-            transition: all 0.3s;
+        .history-item { border-left: 2px solid rgba(96, 165, 250, 0.3); padding-left: 12px; margin-bottom: 8px; transition: all 0.3s; }
+        .history-item:first-child { border-left-color: #60a5fa; background: rgba(96, 165, 250, 0.05); padding: 6px 12px; border-radius: 0 8px 8px 0; }
+
+        /* 第三分頁專屬樣式 */
+        .section-title { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; border-left: 3px solid #3b82f6; padding-left: 8px; margin-bottom: 12px; }
+        .btn-action { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; padding: 6px 16px; border-radius: 99px; font-size: 0.75rem; transition: all 0.3s; font-weight: 600; }
+        .btn-action:hover { background: #3b82f6; color: white; }
+        .btn-add { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+        .usd-label { font-size: 10px; color: #60a5fa; margin-top: 2px; padding-right: 32px; text-align: right; width: 100%; display: block; font-family: monospace; }
+        .stock-label { font-size: 9px; color: #94a3b8; margin-bottom: 4px; display: block; font-weight: bold; }
+
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .status-online { background-color: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite ease-in-out; }
+        .status-syncing { background-color: #3b82f6; box-shadow: 0 0 8px #3b82f6; animation: pulse 1s infinite ease-in-out; }
+        .status-error { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+        #yl-history-container table { width: 100%; border-collapse: collapse; }
+        #yl-history-container th, #yl-history-container td { padding: 12px 8px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        #yl-history-container th { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+        #yl-history-container td { font-family: monospace; font-size: 14px; }
+        .note-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px !important; color: #94a3b8; font-family: sans-serif !important; }
+
+        @media (max-width: 640px) {
+            #yl-history-table thead { display: none; }
+            #yl-history-table-body { display: flex; flex-direction: column; gap: 16px; padding: 10px 4px; }
+            #yl-history-table-body tr { display: block; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            #yl-history-table-body td { display: flex; justify-content: space-between; align-items: center; padding: 6px 0 !important; border: none !important; font-size: 15px !important; }
+            #yl-history-table-body td:nth-child(1) { font-size: 18px !important; border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; margin-bottom: 8px; padding-bottom: 10px !important; color: #fff !important; }
+            #yl-history-table-body td:nth-child(1)::before { content: "結算日期"; font-size: 10px; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; }
+            #yl-history-table-body td:not(:first-child)::before { content: attr(data-label); font-size: 12px; color: #94a3b8; font-weight: normal; font-family: sans-serif; }
+            .note-cell { max-width: 100%; white-space: normal; text-align: right; }
         }
-        .history-item:first-child {
-            border-left-color: #60a5fa;
-            background: rgba(96, 165, 250, 0.05);
-            padding: 6px 12px;
-            border-radius: 0 8px 8px 0;
-        }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="gradient-bg text-slate-200 min-h-screen p-4 md:p-8 font-sans">
@@ -68,6 +91,7 @@
         <div class="flex space-x-6 mb-8 border-b border-white/10 px-2 overflow-x-auto">
             <button id="btn-tab-1" class="pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-blue-500 text-blue-400 transition-colors whitespace-nowrap" onclick="switchTab(1)">投資戰略系統</button>
             <button id="btn-tab-2" class="pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap" onclick="switchTab(2)">進階財務指標計算</button>
+            <button id="btn-tab-3" class="pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap" onclick="switchTab(3)">猷&玲 總資產管理</button>
         </div>
 
         <!-- ======================= -->
@@ -258,8 +282,6 @@
         <!-- 第二分頁：財務指標計算器 -->
         <!-- ======================= -->
         <div id="pane-2" class="hidden relative">
-            
-            <!-- 獨立儲存狀態列與按鈕 -->
             <div class="flex justify-between items-center bg-slate-900/50 p-4 rounded-xl mb-6 border border-white/10">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -271,40 +293,33 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- 第一欄：不動產與負債 -->
                 <div class="space-y-6">
-                    <!-- 不動產區塊 -->
                     <div class="card p-6 rounded-2xl border-t-2 border-blue-500/50 shadow-xl">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">不動產清單</h2>
                             <span class="text-sm font-mono text-blue-400 font-bold">總計: <span id="calc-re-total">0</span></span>
                         </div>
-                        <div id="calc-re-container" class="space-y-2">
-                            <!-- 預設項目由JS動態帶入 -->
-                        </div>
+                        <div id="calc-re-container" class="space-y-2"></div>
                         <button onclick="calcAddRe()" class="text-[10px] text-slate-500 hover:text-white transition w-full text-center mt-3 p-2 border border-dashed border-white/10 rounded">+ 新增不動產</button>
                     </div>
 
-                    <!-- 負債區塊 (整合遠端自動抓取) -->
                     <div class="card p-6 rounded-2xl border-t-2 border-red-500/50 shadow-xl">
                         <div class="flex justify-between items-center mb-4">
                             <div class="flex items-center gap-2">
                                 <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">負債清單</h2>
-                                <span id="debt-fetch-status" class="text-[9px] text-blue-400 font-mono"></span>
+                                <span id="debt-fetch-status" class="text-[9px] text-emerald-400 font-mono">(已自動同步)</span>
                             </div>
                             <div class="flex items-center gap-3">
-                                <button onclick="fetchExternalDebts()" class="text-[9px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-1 rounded hover:bg-red-500/20 transition">🔄 重新抓取</button>
+                                <button onclick="fetchExternalDebts()" class="text-[9px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-1 rounded hover:bg-red-500/20 transition">🔄 重新整理</button>
                                 <span class="text-sm font-mono text-red-400 font-bold">總計: <span id="calc-debt-total">0</span></span>
                             </div>
                         </div>
-                        <div id="calc-debt-container" class="space-y-2">
-                            <!-- 項目由自動抓取或JS動態帶入 -->
-                        </div>
-                        <button onclick="calcAddDebt()" class="text-[10px] text-slate-500 hover:text-white transition w-full text-center mt-3 p-2 border border-dashed border-white/10 rounded">+ 新增負債項目</button>
+                        <div id="calc-debt-container" class="space-y-2"></div>
+                        <div class="text-[10px] text-slate-500 mt-2 text-center italic">* 負債清單已與「總資產管理系統」連動同步</div>
                     </div>
                 </div>
 
-                <!-- 第二欄：現金、股票與年度開銷 -->
+                <!-- 第二欄：現金, 股票與年度開銷 -->
                 <div class="space-y-6">
-                    <!-- 現金與股票 -->
                     <div class="card p-6 rounded-2xl border-t-2 border-emerald-500/50 shadow-xl">
                         <div class="flex justify-between items-center mb-5">
                             <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">流動資產 (現金與股票)</h2>
@@ -332,7 +347,6 @@
                         </div>
                     </div>
                     
-                    <!-- 支出區塊 -->
                     <div class="card p-6 rounded-2xl border-t-2 border-purple-500/50 shadow-xl">
                         <div class="flex justify-between items-center">
                             <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">年度開銷</h2>
@@ -351,9 +365,7 @@
                             <h2 class="text-sm font-bold text-amber-400 tracking-widest uppercase">財務指標分析</h2>
                             <button onclick="calcOpenModal()" class="btn-save !mt-0 !bg-amber-500/10 !border-amber-500/30 !text-amber-400 hover:!bg-amber-500/20">💡 智慧匯入</button>
                         </div>
-                        
                         <div class="space-y-8">
-                            <!-- 指標項目 -->
                             <div class="border-b border-white/5 pb-4">
                                 <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">資產負債比 (總負債 / 總資產)</div>
                                 <div id="calc-res-debtratio" class="text-3xl font-mono font-bold text-white tracking-tighter">0.00%</div>
@@ -375,6 +387,142 @@
                 </div>
             </div>
         </div>
+        
+        <!-- ======================= -->
+        <!-- 第三分頁：猷 & 玲 總資產管理系統 -->
+        <!-- ======================= -->
+        <div id="pane-3" class="hidden">
+            <header class="flex flex-col md:flex-row justify-between items-center mb-10 border-b border-white/10 pb-8 gap-8">
+                <div class="flex flex-col items-center md:items-start">
+                    <h1 class="text-xl font-bold tracking-widest text-white mb-2">總資產管理系統</h1>
+                    <div class="flex items-center gap-6">
+                        <button onclick="ylToggleSubPage('edit')" id="yl-nav-edit" class="text-xs font-bold text-purple-400 border-b-2 border-purple-400 pb-1 transition-all">資產編輯</button>
+                        <button onclick="ylToggleSubPage('history')" id="yl-nav-history" class="text-xs font-bold text-slate-500 hover:text-white pb-1 transition-all">歷史紀錄</button>
+                    </div>
+                </div>
+                <div class="flex gap-12">
+                    <div class="text-center">
+                        <span class="text-[10px] text-slate-500 uppercase block mb-1 tracking-wider">現有存款</span>
+                        <span id="yl-global-bank-sum" class="text-2xl font-mono font-bold text-emerald-400">0</span>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-[10px] text-blue-300 uppercase block mb-1 tracking-wider">現有總資產</span>
+                        <span id="yl-global-asset-sum" class="text-2xl font-mono font-bold text-white">0</span>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="text-center mb-6"> <span class="text-[10px] text-slate-500 uppercase block mb-0.5 tracking-wider">USD/TWD 參考匯率</span>
+                        <span id="yl-fx-rate-display" class="text-lg text-white font-mono font-bold">--.--</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <button onclick="ylSaveData()" class="btn-action !border-purple-500/40 !text-purple-400 hover:!bg-purple-500 hover:!text-white tracking-widest uppercase px-10">儲存並更新</button>
+                        <div class="mt-2 text-center">
+                            <div class="flex items-center justify-center">
+                                <span id="yl-status-indicator" class="status-dot status-online"></span>
+                                <span id="yl-sync-status" class="text-slate-500 text-[10px] tracking-widest uppercase font-semibold">連線中</span>
+                            </div>
+                            <div id="yl-last-update-time" class="text-[9px] text-slate-500 mt-1 font-mono uppercase">最後更新時間: 讀取中...</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div id="yl-page-edit" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-6 rounded-2xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-bold text-white tracking-widest">猷</h2>
+                        <span id="yl-you-total" class="font-mono text-white font-bold text-lg">0</span>
+                    </div>
+                    <div class="section-title !border-purple-500">銀行存款</div>
+                    <div id="yl-you-bank-list" class="space-y-2 mb-4"></div>
+                    <button onclick="ylAddRow('yl-you-bank-list')" class="btn-add">+ 新增銀行</button>
+                    <div class="section-title mt-8 !border-purple-500">股票庫存</div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><span class="stock-label">台股市值 (TWD)</span><input type="number" id="yl-you-stock-tw" class="input-field font-mono" oninput="ylCalculate()"></div>
+                        <div><span class="stock-label">美股市值 (USD)</span><input type="number" id="yl-you-stock-us" class="input-field font-mono text-blue-400" oninput="ylCalculate()"></div>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-2 text-right">美股折合 TWD: <span id="yl-you-stock-us-twd">0</span></p>
+                </div>
+
+                <div class="card p-6 rounded-2xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-bold text-white tracking-widest">玲</h2>
+                        <span id="yl-ling-total" class="font-mono text-white font-bold text-lg">0</span>
+                    </div>
+                    <div class="section-title !border-purple-500">銀行存款</div>
+                    <div id="yl-ling-bank-list" class="space-y-2 mb-4"></div>
+                    <button onclick="ylAddRow('yl-ling-bank-list')" class="btn-add">+ 新增銀行</button>
+                    <div class="section-title mt-8 !border-purple-500">股票庫存</div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><span class="stock-label">台股市值 (TWD)</span><input type="number" id="yl-ling-stock-1" class="input-field font-mono" oninput="ylCalculate()"></div>
+                        <div><span class="stock-label">雄獅配股市值 (TWD)</span><input type="number" id="yl-ling-stock-2" class="input-field font-mono" oninput="ylCalculate()"></div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 card p-6 rounded-2xl border-t-2 border-red-500/50">
+                    <h2 class="text-xs font-bold text-white tracking-widest mb-6 uppercase">貸款負債管理</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <div class="flex justify-between items-center mb-2"><span class="text-[10px] text-slate-500 uppercase">房貸明細</span><span id="yl-loan-house-sum" class="font-mono text-red-400">0</span></div>
+                            <div id="yl-loan-house-list" class="space-y-2"></div>
+                            <button onclick="ylAddRow('yl-loan-house-list', '房貸名稱')" class="btn-add mt-2">+ 房貸</button>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2"><span class="text-[10px] text-slate-500 uppercase">信貸明細</span><span id="yl-loan-credit-sum" class="font-mono text-red-400">0</span></div>
+                            <div id="yl-loan-credit-list" class="space-y-2"></div>
+                            <button onclick="ylAddRow('yl-loan-credit-list', '信貸名稱')" class="btn-add mt-2">+ 信貸</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 card p-6 rounded-2xl border-t-2 border-emerald-500/50">
+                    <div class="flex justify-between items-end mb-6">
+                        <h2 class="text-xs font-bold text-white tracking-widest uppercase">月底資產結算</h2>
+                        <span class="text-[10px] text-slate-500">上次結算值: <span id="yl-last-month-val">0</span></span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="bg-black/20 p-3 rounded-lg"><label class="text-[9px] text-slate-500 block uppercase">結算日期</label><input type="date" id="yl-archive-date" class="bg-transparent text-white font-mono text-xs w-full outline-none"></div>
+                        <div class="bg-black/20 p-3 rounded-lg"><label class="text-[9px] text-slate-500 block uppercase">淨資產(扣除所有負債)</label><div id="yl-res-net" class="font-mono text-sm font-bold text-blue-400">0</div></div>
+                        <div class="bg-black/20 p-3 rounded-lg"><label class="text-[9px] text-slate-500 block uppercase">本月增減</label><div id="yl-res-diff" class="font-mono text-sm font-bold">0</div></div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="text-[9px] text-slate-500 block uppercase mb-1">本月結算備註</label>
+                        <textarea id="yl-archive-note" class="input-field w-full h-16 text-xs bg-black/20" placeholder="例如：首爾旅遊、網球學費..."></textarea>
+                    </div>
+                    <div class="flex justify-center">
+                        <button onclick="ylArchiveHistory()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-12 py-3 rounded-xl text-sm font-black tracking-[0.2em] transition-all shadow-lg shadow-emerald-900/20 active:scale-95">確認結算</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="yl-page-history" class="hidden">
+                <div class="card p-4 md:p-6 rounded-2xl" id="yl-history-container">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 px-2 gap-4">
+                        <h2 class="text-xl font-bold text-white tracking-widest">歷史紀錄</h2>
+                        <div class="flex gap-2">
+                            <button onclick="ylExportToExcel()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-[10px] font-bold tracking-widest transition-all">匯出 EXCEL 報表</button>
+                            <button onclick="ylLoadHistoryTable()" class="btn-action text-[10px]">重新整理</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="yl-history-table">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>總資產</th>
+                                    <th>淨資產(扣所有貸款)</th>
+                                    <th>存款</th>
+                                    <th>匯率</th>
+                                    <th>增減</th>
+                                    <th>備註</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yl-history-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 智慧匯入 Modal (暗黑風格) -->
@@ -390,17 +538,16 @@
         </div>
     </div>
 
+
     <!-- ======================= -->
-    <!-- 第一分頁：原版系統與GAS整合腳本區 -->
+    <!-- 第 1 分頁：原版系統與第一 GAS 整合腳本區 -->
     <!-- ======================= -->
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxbYPyWLw2Da1goYFISnTpsSGfnuxNGEkhJIOU2iozNDQA7xnVROFjBM5rKj98foX0h/exec'; 
+        const MAIN_GAS_URL = 'https://script.google.com/macros/s/AKfycbxbYPyWLw2Da1goYFISnTpsSGfnuxNGEkhJIOU2iozNDQA7xnVROFjBM5rKj98foX0h/exec'; 
         let currentFxRate = 32.5;
         let assetHistory = []; 
         let currentTotalAssets = 0;
-        
         let maxAssetRecord = { amount: 0, timestamp: '' };
-
         const emptyIfZero = (val) => (val == 0 || val === null || val === undefined) ? "" : val;
 
         async function fetchFxRate() {
@@ -412,9 +559,7 @@
                     document.getElementById('fx-rate-display').innerText = currentFxRate.toFixed(2);
                     calculate();
                 }
-            } catch (e) {
-                document.getElementById('fx-rate-display').innerText = "32.50 (估)";
-            }
+            } catch (e) { document.getElementById('fx-rate-display').innerText = "32.50 (估)"; }
         }
 
         function updateHistoryUI() {
@@ -441,33 +586,16 @@
             if (displayAmount === 0) {
                 highContainer.innerHTML = '<span class="text-slate-600 text-[10px] italic">暫無資產資料...</span>';
             } else {
-                highContainer.innerHTML = `
-                    <div class="flex flex-col">
-                        <span class="text-xl font-mono text-amber-400 font-bold tracking-tight">
-                            ${Math.floor(displayAmount).toLocaleString()} 
-                            <span class="text-xs text-slate-500 ml-1 font-normal">TWD</span>
-                        </span>
-                        <span class="text-[10px] text-slate-400 font-mono mt-1">
-                            ${displayTime}
-                        </span>
-                    </div>
-                `;
+                highContainer.innerHTML = `<div class="flex flex-col"><span class="text-xl font-mono text-amber-400 font-bold tracking-tight">${Math.floor(displayAmount).toLocaleString()} <span class="text-xs text-slate-500 ml-1 font-normal">TWD</span></span><span class="text-[10px] text-slate-400 font-mono mt-1">${displayTime}</span></div>`;
             }
 
             if (assetHistory.length > 0) {
                 const lastSaved = assetHistory[0].amount;
                 const diff = currentTotalAssets - lastSaved;
                 const diffDisplay = document.getElementById('diff-display');
-                if (diff > 0) {
-                    diffDisplay.innerText = `+${Math.floor(diff).toLocaleString()}`;
-                    diffDisplay.className = "text-sm font-mono mt-1 font-bold loss"; 
-                } else if (diff < 0) {
-                    diffDisplay.innerText = `${Math.floor(diff).toLocaleString()}`;
-                    diffDisplay.className = "text-sm font-mono mt-1 font-bold profit"; 
-                } else {
-                    diffDisplay.innerText = "±0";
-                    diffDisplay.className = "text-sm font-mono mt-1 font-bold text-slate-500";
-                }
+                if (diff > 0) { diffDisplay.innerText = `+${Math.floor(diff).toLocaleString()}`; diffDisplay.className = "text-sm font-mono mt-1 font-bold loss"; } 
+                else if (diff < 0) { diffDisplay.innerText = `${Math.floor(diff).toLocaleString()}`; diffDisplay.className = "text-sm font-mono mt-1 font-bold profit"; } 
+                else { diffDisplay.innerText = "±0"; diffDisplay.className = "text-sm font-mono mt-1 font-bold text-slate-500"; }
             }
         }
 
@@ -476,45 +604,26 @@
             Sortable.create(document.getElementById('bank-list'), { animation: 150, handle: '.drag-handle', onEnd: () => calculate() });
         }
 
-        function quickAdd(id, amount) {
-            const input = document.getElementById(id);
-            input.value = (parseFloat(input.value) || 0) + amount;
-            calculate();
-        }
+        function quickAdd(id, amount) { const input = document.getElementById(id); input.value = (parseFloat(input.value) || 0) + amount; calculate(); }
 
         function addRow(type, name = '', amount = '') {
             const container = document.getElementById(type === 'bank' ? 'bank-list' : 'expense-list');
             const row = document.createElement('div');
             row.className = `flex gap-2 items-center ${type}-row bg-white/5 p-2 rounded-lg mb-1`;
-            const nameClass = type === 'bank' ? 'bank-name' : 'exp-name';
-            const amountClass = type === 'bank' ? 'bank-amount' : 'exp-amount';
-            
-            row.innerHTML = `
-                <div class="drag-handle text-slate-600">⋮</div>
-                <input type="text" class="input-field ${nameClass} text-xs" value="${name}" placeholder="${type === 'bank' ? '銀行名稱' : '項目'}">
-                <input type="number" class="input-field ${amountClass} w-24 font-mono text-right text-xs" value="${emptyIfZero(amount)}" placeholder="金額" oninput="calculate()">
-                <span class="btn-delete" onclick="this.parentElement.remove(); calculate();">✕</span>`;
-            container.appendChild(row);
-            calculate();
+            row.innerHTML = `<div class="drag-handle text-slate-600">⋮</div><input type="text" class="input-field ${type === 'bank' ? 'bank-name' : 'exp-name'} text-xs" value="${name}" placeholder="${type === 'bank' ? '銀行名稱' : '項目'}"><input type="number" class="input-field ${type === 'bank' ? 'bank-amount' : 'exp-amount'} w-24 font-mono text-right text-xs" value="${emptyIfZero(amount)}" placeholder="金額" oninput="calculate()"><span class="btn-delete" onclick="this.parentElement.remove(); calculate();">✕</span>`;
+            container.appendChild(row); calculate();
         }
 
         function calculateWithMarketValue() {
             const principal = parseFloat(document.getElementById('input-us-principal-usd').value) || 0;
             const marketValue = parseFloat(document.getElementById('input-us-market-usd').value) || 0;
-            if (marketValue !== 0) {
-                document.getElementById('pnl-us-usd').value = (marketValue - principal).toFixed(2);
-            } else {
-                document.getElementById('pnl-us-usd').value = "";
-            }
+            document.getElementById('pnl-us-usd').value = marketValue !== 0 ? (marketValue - principal).toFixed(2) : "";
             calculate();
         }
 
         function calculate() {
             let totalBankCash = 0;
-            document.querySelectorAll('.bank-amount').forEach(i => {
-                const val = parseFloat(i.value);
-                if (!isNaN(val)) totalBankCash += val;
-            });
+            document.querySelectorAll('.bank-amount').forEach(i => { const val = parseFloat(i.value); if (!isNaN(val)) totalBankCash += val; });
             document.getElementById('input-cash').value = totalBankCash === 0 ? "" : Math.floor(totalBankCash).toLocaleString();
 
             const usPrincipalUsd = parseFloat(document.getElementById('input-us-principal-usd').value) || 0;
@@ -546,403 +655,163 @@
             document.getElementById('bar-tw').style.width = Math.min((twPrincipal / targetTw) * 100, 100) + "%";
             
             const income = parseFloat(document.getElementById('input-income').value) || 0;
-            let totalExp = 0;
-            document.querySelectorAll('.exp-amount').forEach(i => {
-                const val = parseFloat(i.value);
-                if (!isNaN(val)) totalExp += val;
-            });
+            let totalExp = 0; document.querySelectorAll('.exp-amount').forEach(i => { const val = parseFloat(i.value); if (!isNaN(val)) totalExp += val; });
             document.getElementById('display-total-expense').value = totalExp === 0 ? "" : totalExp.toLocaleString();
             const balance = income - totalExp;
             const gapDisplay = document.getElementById('monthly-gap-display');
             gapDisplay.innerText = (balance > 0 ? "+" : "") + balance.toLocaleString();
             gapDisplay.className = `text-2xl font-mono font-bold ${balance >= 0 ? 'loss' : 'profit'}`;
 
-            // 跨分頁自動同步純現金與股票 (以確切金額填入)
             document.getElementById('calc-cash').value = totalBankCash > 0 ? totalBankCash : 0;
             document.getElementById('calc-tw-stock').value = twMarket > 0 ? twMarket : 0;
             document.getElementById('calc-us-stock').value = usMarketValueUsd > 0 ? usMarketValueUsd : 0;
-            
-            if (typeof calcMetrics === 'function') {
-                calcMetrics();
-            }
+            if (typeof calcMetrics === 'function') calcMetrics();
         }
 
         async function saveData() {
             const status = document.getElementById('sync-status');
             const calcStatus = document.getElementById('calc-sync-status');
             const timeDisplay = document.getElementById('last-save-time');
-            
-            status.innerText = "正在儲存...";
+            if(status) status.innerText = "正在儲存..."; 
             if(calcStatus) calcStatus.innerText = "正在儲存...";
 
             const now = new Date();
             const timeString = `${now.getFullYear()}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-
-            if (currentTotalAssets > maxAssetRecord.amount) {
-                maxAssetRecord = {
-                    amount: currentTotalAssets,
-                    timestamp: timeString
-                };
-            }
-
-            if (currentTotalAssets > 0) {
-                assetHistory.unshift({
-                    amount: currentTotalAssets,
-                    timestamp: timeString
-                });
-                assetHistory = assetHistory.slice(0, 10);
-            }
+            if (currentTotalAssets > maxAssetRecord.amount) maxAssetRecord = { amount: currentTotalAssets, timestamp: timeString };
+            if (currentTotalAssets > 0) { assetHistory.unshift({ amount: currentTotalAssets, timestamp: timeString }); assetHistory = assetHistory.slice(0, 10); }
 
             const data = {
-                lastSave: timeString,
-                assetHistory: assetHistory, 
-                maxAssetRecord: maxAssetRecord, 
-                income: document.getElementById('input-income').value,
-                ammo: document.getElementById('input-ammo').value,
-                travel: document.getElementById('input-travel').value,
-                usPrincipalUsd: document.getElementById('input-us-principal-usd').value,
-                usMarketUsd: document.getElementById('input-us-market-usd').value,
-                tw: document.getElementById('input-tw').value,
-                twMarket: document.getElementById('input-tw-market').value,
-                targetUs: document.getElementById('target-us').value,
-                targetTw: document.getElementById('target-tw').value,
-                banks: Array.from(document.querySelectorAll('.bank-row')).map(r => ({
-                    name: r.querySelector('.bank-name').value,
-                    amount: r.querySelector('.bank-amount').value
-                })),
-                expenses: Array.from(document.querySelectorAll('.expense-row')).map(r => ({
-                    name: r.querySelector('.exp-name').value,
-                    amount: r.querySelector('.exp-amount').value
-                })),
-                
-                // 第二分頁資料
-                calcCash: document.getElementById('calc-cash').value,
-                calcTwStock: document.getElementById('calc-tw-stock').value,
-                calcUsStock: document.getElementById('calc-us-stock').value,
-                calcExpenses: document.getElementById('calc-expenses').value,
-                calcRealEstate: Array.from(document.querySelectorAll('.calc-re-row')).map(r => ({
-                    name: r.querySelector('input[type="text"]').value,
-                    amount: r.querySelector('.calc-re-input').value
-                })),
-                calcDebts: Array.from(document.querySelectorAll('.calc-debt-row')).map(r => ({
-                    name: r.querySelector('input[type="text"]').value,
-                    amount: r.querySelector('.calc-debt-input').value
-                }))
+                lastSave: timeString, assetHistory: assetHistory, maxAssetRecord: maxAssetRecord, 
+                income: document.getElementById('input-income').value, ammo: document.getElementById('input-ammo').value, travel: document.getElementById('input-travel').value,
+                usPrincipalUsd: document.getElementById('input-us-principal-usd').value, usMarketUsd: document.getElementById('input-us-market-usd').value, tw: document.getElementById('input-tw').value, twMarket: document.getElementById('input-tw-market').value,
+                targetUs: document.getElementById('target-us').value, targetTw: document.getElementById('target-tw').value,
+                banks: Array.from(document.querySelectorAll('.bank-row')).map(r => ({ name: r.querySelector('.bank-name').value, amount: r.querySelector('.bank-amount').value })),
+                expenses: Array.from(document.querySelectorAll('.expense-row')).map(r => ({ name: r.querySelector('.exp-name').value, amount: r.querySelector('.exp-amount').value })),
+                calcCash: document.getElementById('calc-cash').value, calcTwStock: document.getElementById('calc-tw-stock').value, calcUsStock: document.getElementById('calc-us-stock').value, calcExpenses: document.getElementById('calc-expenses').value,
+                calcRealEstate: Array.from(document.querySelectorAll('.calc-re-row')).map(r => ({ name: r.querySelector('input[type="text"]').value, amount: r.querySelector('.calc-re-input').value })),
+                calcDebts: Array.from(document.querySelectorAll('.calc-debt-row')).map(r => ({ name: r.querySelector('input[type="text"]').value, amount: r.querySelector('.calc-debt-input').value }))
             };
 
             try {
-                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-                status.innerText = "已儲存";
+                await fetch(MAIN_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+                if(status) status.innerText = "已儲存"; 
                 if(calcStatus) calcStatus.innerText = "已同步至雲端";
-                timeDisplay.innerText = `最後更新時間: ${timeString}`;
+                if(timeDisplay) timeDisplay.innerText = `最後更新時間: ${timeString}`; 
                 updateHistoryUI(); 
-                setTimeout(() => {
-                    status.innerText = "系統連線中";
-                    if(calcStatus) calcStatus.innerText = "系統連線中";
-                }, 2000);
+                setTimeout(() => { if(status) status.innerText = "系統連線中"; if(calcStatus) calcStatus.innerText = "系統連線中"; }, 2000);
             } catch (e) { 
-                status.innerText = "儲存失敗"; 
+                console.error("儲存發生錯誤", e);
+                if(status) status.innerText = "儲存失敗"; 
                 if(calcStatus) calcStatus.innerText = "儲存失敗"; 
             }
         }
 
         async function loadData() {
             try {
-                const response = await fetch(GAS_URL);
+                const response = await fetch(MAIN_GAS_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
+                
                 if (data) {
                     assetHistory = data.assetHistory || [];
+                    if (data.maxAssetRecord) maxAssetRecord = data.maxAssetRecord; else if (assetHistory.length > 0) maxAssetRecord = assetHistory.reduce((max, item) => item.amount > max.amount ? item : max, assetHistory[0]);
                     
-                    if (data.maxAssetRecord) {
-                        maxAssetRecord = data.maxAssetRecord;
-                    } else if (assetHistory.length > 0) {
-                        maxAssetRecord = assetHistory.reduce((max, item) => item.amount > max.amount ? item : max, assetHistory[0]);
-                    }
+                    document.getElementById('input-income').value = emptyIfZero(data.income); document.getElementById('input-ammo').value = emptyIfZero(data.ammo); document.getElementById('input-travel').value = emptyIfZero(data.travel);
+                    document.getElementById('input-us-principal-usd').value = emptyIfZero(data.usPrincipalUsd); document.getElementById('input-us-market-usd').value = emptyIfZero(data.usMarketUsd);
+                    document.getElementById('input-tw').value = emptyIfZero(data.tw); document.getElementById('input-tw-market').value = emptyIfZero(data.twMarket);
+                    document.getElementById('target-us').value = data.targetUs || 2800000; document.getElementById('target-tw').value = data.targetTw || 3990000;
+                    
+                    document.getElementById('bank-list').innerHTML = ''; if (data.banks?.length > 0) data.banks.forEach(b => addRow('bank', b.name, b.amount));
+                    document.getElementById('expense-list').innerHTML = ''; if (data.expenses?.length > 0) data.expenses.forEach(ex => addRow('expense', ex.name, ex.amount));
+                    updateHistoryUI(); calculateWithMarketValue(); 
 
-                    // 載入第一分頁資料
-                    document.getElementById('input-income').value = emptyIfZero(data.income);
-                    document.getElementById('input-ammo').value = emptyIfZero(data.ammo);
-                    document.getElementById('input-travel').value = emptyIfZero(data.travel);
-                    document.getElementById('input-us-principal-usd').value = emptyIfZero(data.usPrincipalUsd);
-                    document.getElementById('input-us-market-usd').value = emptyIfZero(data.usMarketUsd);
-                    document.getElementById('input-tw').value = emptyIfZero(data.tw);
-                    document.getElementById('input-tw-market').value = emptyIfZero(data.twMarket);
-                    document.getElementById('target-us').value = data.targetUs || 2800000;
-                    document.getElementById('target-tw').value = data.targetTw || 3990000;
-                    
-                    document.getElementById('bank-list').innerHTML = '';
-                    if (data.banks?.length > 0) data.banks.forEach(b => addRow('bank', b.name, b.amount));
-                    
-                    document.getElementById('expense-list').innerHTML = '';
-                    if (data.expenses?.length > 0) data.expenses.forEach(ex => addRow('expense', ex.name, ex.amount));
-                    
-                    updateHistoryUI(); 
-                    calculateWithMarketValue(); 
-
-                    // 載入第二分頁資料
                     if (data.calcExpenses !== undefined) document.getElementById('calc-expenses').value = emptyIfZero(data.calcExpenses);
+                    if (data.calcRealEstate && data.calcRealEstate.length > 0) { document.getElementById('calc-re-container').innerHTML = ''; data.calcRealEstate.forEach(item => { if (typeof calcAddRe === 'function') calcAddRe(item.name, item.amount); }); } 
+                    else if (!data.calcRealEstate) { if (typeof calcAddRe === 'function') { calcAddRe('房產一', '32000000'); calcAddRe('房產二', '29000000'); } }
 
-                    if (data.calcRealEstate && data.calcRealEstate.length > 0) {
-                        document.getElementById('calc-re-container').innerHTML = '';
-                        data.calcRealEstate.forEach(item => {
-                            if (typeof calcAddRe === 'function') calcAddRe(item.name, item.amount);
-                        });
-                    } else if (!data.calcRealEstate) {
-                        if (typeof calcAddRe === 'function') {
-                            calcAddRe('房產一', '32000000');
-                            calcAddRe('房產二', '29000000');
-                        }
-                    }
-
-                    // 載入負債備援資料 (若遠端抓取尚未執行或失敗時使用)
-                    if (data.calcDebts && data.calcDebts.length > 0) {
-                        document.getElementById('calc-debt-container').innerHTML = '';
-                        data.calcDebts.forEach(item => {
-                            if (typeof calcAddDebt === 'function') calcAddDebt(item.name, item.amount);
-                        });
-                    } else if (!data.calcDebts) {
-                        if (typeof calcAddDebt === 'function') {
-                            calcAddDebt('房貸', '48800000');
-                            calcAddDebt('信貸', '4190000');
-                        }
-                    }
-                    
                     if (typeof calcMetrics === 'function') calcMetrics();
                 }
-            } catch (e) { console.error("載入失敗", e); }
+            } catch (e) { 
+                console.error("載入失敗", e); 
+                document.getElementById('history-list').innerHTML = '<span class="text-red-400 text-[10px] italic">資料讀取失敗，請確認 GAS 部署是否正確且允許所有人存取。</span>';
+            }
         }
-
-        window.onload = () => { fetchFxRate(); loadData(); initSortable(); };
     </script>
 
+
     <!-- ======================= -->
-    <!-- 第二分頁：財務指標專屬腳本區 -->
+    <!-- 第 2 分頁：財務指標專屬腳本區 -->
     <!-- ======================= -->
     <script>
         let calcFxRate = 32.0;
         let isCalcInitialized = false;
 
-        function switchTab(tabIndex) {
-            const pane1 = document.getElementById('pane-1');
-            const pane2 = document.getElementById('pane-2');
-            const btn1 = document.getElementById('btn-tab-1');
-            const btn2 = document.getElementById('btn-tab-2');
-
-            if (tabIndex === 1) {
-                pane1.classList.remove('hidden');
-                pane2.classList.add('hidden');
-                btn1.className = "pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-blue-500 text-blue-400 transition-colors whitespace-nowrap";
-                btn2.className = "pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap";
-            } else {
-                pane1.classList.add('hidden');
-                pane2.classList.remove('hidden');
-                btn2.className = "pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-emerald-500 text-emerald-400 transition-colors whitespace-nowrap";
-                btn1.className = "pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap";
-                
-                if (!isCalcInitialized) {
-                    calcFetchExchangeRate();
-                    fetchExternalDebts(); // 切換到此分頁時自動嘗試同步遠端負債
-                    isCalcInitialized = true;
-                }
-            }
-        }
-
         async function calcFetchExchangeRate() {
             try {
                 const response = await fetch('https://open.er-api.com/v6/latest/USD');
                 const data = await response.json();
-                if (data && data.rates && data.rates.TWD) {
-                    calcFxRate = data.rates.TWD;
-                    document.getElementById('calc-rate-info').innerText = `即時匯率: 1 USD = ${calcFxRate.toFixed(2)} TWD`;
-                }
-            } catch (error) {
-                document.getElementById('calc-rate-info').innerText = `使用預設匯率: 32.0 TWD`;
-            }
+                if (data && data.rates && data.rates.TWD) { calcFxRate = data.rates.TWD; document.getElementById('calc-rate-info').innerText = `即時匯率: 1 USD = ${calcFxRate.toFixed(2)} TWD`; }
+            } catch (error) { document.getElementById('calc-rate-info').innerText = `使用預設匯率: 32.0 TWD`; }
             calcMetrics(); 
         }
 
-        // ============================================
-        // 核心功能：直接抓取外部網頁「貸款負債管理」的項目與數字
-        // ============================================
-        async function fetchExternalDebts() {
+        // ========================================================
+        // 核心修改：直接從「總資產管理系統 (第三分頁)」抓取貸款負債明細
+        // ========================================================
+        function fetchExternalDebts() {
             const statusEl = document.getElementById('debt-fetch-status');
             if (statusEl) statusEl.innerText = '(同步中...)';
 
-            const targetUrl = 'https://cyhong1988.github.io/assetsmanagement.github.io/';
-            let htmlText = null;
-
-            // 1. 優先直接 Fetch 網頁內容
             try {
-                const res = await fetch(targetUrl);
-                if (res.ok) {
-                    htmlText = await res.text();
-                }
-            } catch (err) {
-                console.warn('直接抓取受跨網域(CORS)限制，切換為 CORS 代理服務抓取...', err);
-            }
+                const container = document.getElementById('calc-debt-container');
+                container.innerHTML = ''; // 清空現有清單
 
-            // 2. 若直接連線受限，切換至可靠的 CORS Proxy 備援
-            if (!htmlText) {
-                try {
-                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-                    const res = await fetch(proxyUrl);
-                    if (res.ok) {
-                        htmlText = await res.text();
-                    }
-                } catch (err) {
-                    console.error('CORS 代理抓取失敗:', err);
-                }
-            }
+                let totalSynced = 0;
 
-            if (!htmlText) {
-                if (statusEl) statusEl.innerText = '(無法讀取遠端)';
-                return;
-            }
-
-            // 3. 解析 DOM 尋找「貸款負債管理」
-            try {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, 'text/html');
-                const extractedDebts = [];
-
-                // 搜尋包含「貸款負債管理」的標題或區塊
-                const elements = doc.querySelectorAll('h1, h2, h3, h4, h5, div, span, p, section');
-                let targetContainer = null;
-
-                for (const el of elements) {
-                    const txt = (el.innerText || el.textContent || '').trim();
-                    if (txt === '貸款負債管理' || txt.includes('貸款負債管理') || (txt.includes('負債管理') && txt.length < 15)) {
-                        targetContainer = el.closest('.card') || el.closest('section') || el.closest('.section') || el.parentElement;
-                        // 若容器太窄，往上一層抓取整個區塊
-                        if (targetContainer && targetContainer.children.length <= 2 && targetContainer.parentElement) {
-                            targetContainer = targetContainer.parentElement;
+                // 同步第三分頁中的房貸與信貸項目
+                const ylLoans = document.querySelectorAll('#yl-loan-house-list > div.yl-row-item, #yl-loan-credit-list > div.yl-row-item');
+                
+                if (ylLoans.length > 0) {
+                    ylLoans.forEach(row => {
+                        const name = row.querySelector('.yl-item-name')?.value || '';
+                        const amount = row.querySelector('.yl-item-amount')?.value || '';
+                        if (name || amount) {
+                            calcAddDebt(name, amount);
+                            totalSynced++;
                         }
-                        break;
-                    }
-                }
-
-                const scope = targetContainer || doc.body;
-
-                // 狀況 A: 解析表格型態 (Table rows)
-                const tables = scope.querySelectorAll('table');
-                for (const table of tables) {
-                    const rows = table.querySelectorAll('tbody tr, tr');
-                    for (const row of rows) {
-                        const cells = Array.from(row.querySelectorAll('td, th'));
-                        if (cells.length >= 2) {
-                            const name = cells[0].textContent.trim();
-                            if (name.includes('名稱') || name.includes('項目') || name.includes('總計') || name.includes('合計')) continue;
-
-                            for (let i = 1; i < cells.length; i++) {
-                                const cleanTxt = cells[i].textContent.replace(/[,$\sNTD]/g, '').trim();
-                                let num = parseFloat(cleanTxt);
-                                if (!isNaN(num) && num > 0) {
-                                    if (cells[i].textContent.includes('萬')) num *= 10000;
-                                    extractedDebts.push({ name, amount: num });
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // 狀況 B: 解析輸入框型態 (Input fields)
-                if (extractedDebts.length === 0) {
-                    const rowDivs = scope.querySelectorAll('[class*="row"], .flex, li');
-                    for (const r of rowDivs) {
-                        const inputs = r.querySelectorAll('input');
-                        if (inputs.length >= 2) {
-                            const name = inputs[0].value || inputs[0].placeholder || '';
-                            const rawVal = inputs[1].value || inputs[1].placeholder || '';
-                            let num = parseFloat(rawVal.replace(/[,$\s]/g, ''));
-                            if (!isNaN(num) && num > 0 && name) {
-                                extractedDebts.push({ name, amount: num });
-                            }
-                        }
-                    }
-                }
-
-                // 狀況 C: 解析 JavaScript 變數或全域陣列資料
-                if (extractedDebts.length === 0) {
-                    const scriptMatch = htmlText.match(/(?:loans|debts|mortgages|loanList|debtList)\s*[:=]\s*(\[[^\]]+\])/i);
-                    if (scriptMatch && scriptMatch[1]) {
-                        try {
-                            const parsed = JSON.parse(scriptMatch[1]);
-                            if (Array.isArray(parsed)) {
-                                parsed.forEach(item => {
-                                    const name = item.name || item.title || item.bank || item.item || '';
-                                    let amount = parseFloat(item.amount || item.balance || item.principal || item.val || 0);
-                                    if (name && !isNaN(amount) && amount > 0) {
-                                        extractedDebts.push({ name, amount });
-                                    }
-                                });
-                            }
-                        } catch (e) {}
-                    }
-                }
-
-                // 狀況 D: 正則表達式抓取關鍵字數值 (保底防禦)
-                if (extractedDebts.length === 0) {
-                    const regex = /(房貸[\w\u4e00-\u9fa5]*|信貸[\w\u4e00-\u9fa5]*|車貸[\w\u4e00-\u9fa5]*|質押[\w\u4e00-\u9fa5]*)[：:\s]+([0-9,]+(?:\.[0-9]+)?)\s*(萬|元)?/g;
-                    let match;
-                    while ((match = regex.exec(htmlText)) !== null) {
-                        const name = match[1].trim();
-                        let val = parseFloat(match[2].replace(/,/g, ''));
-                        if (match[3] === '萬') val *= 10000;
-                        if (!isNaN(val) && val > 0) {
-                            extractedDebts.push({ name, amount: val });
-                        }
-                    }
-                }
-
-                // 成功抓取到項目，更新至畫面
-                if (extractedDebts.length > 0) {
-                    const container = document.getElementById('calc-debt-container');
-                    container.innerHTML = '';
-                    extractedDebts.forEach(d => {
-                        calcAddDebt(d.name, d.amount);
                     });
-                    calcMetrics();
-                    if (statusEl) statusEl.innerText = `(已同步 ${extractedDebts.length} 筆)`;
                 } else {
-                    if (statusEl) statusEl.innerText = '(未發現負債項目)';
+                    // 若第三分頁尚未初始化或無資料，建立備援預設欄位
+                    calcAddDebt('房貸', '48800000');
+                    calcAddDebt('信貸', '4190000');
+                    totalSynced = 2;
                 }
 
+                calcMetrics();
+                if (statusEl) statusEl.innerText = `(已自動同步 ${totalSynced} 筆)`;
             } catch (e) {
-                console.error('解析遠端負債清單失敗:', e);
-                if (statusEl) statusEl.innerText = '(解析失敗)';
+                console.error('內部連動負債清單失敗:', e);
+                if (statusEl) statusEl.innerText = '(同步失敗)';
             }
         }
 
         function calcAddRe(name = '', amount = '') {
-            const container = document.getElementById('calc-re-container');
-            const row = document.createElement('div');
+            const container = document.getElementById('calc-re-container'); const row = document.createElement('div');
             row.className = 'flex gap-2 items-center calc-re-row';
-            row.innerHTML = `
-                <input type="text" class="input-field text-xs w-1/3" value="${name}" placeholder="名稱 (例:房產C)">
-                <input type="number" class="input-field calc-re-input font-mono text-right text-xs w-2/3" value="${amount}" placeholder="市值(確切金額)">
-                <button class="btn-delete" onclick="this.parentElement.remove(); calcMetrics();">✕</button>
-            `;
+            row.innerHTML = `<input type="text" class="input-field text-xs w-1/3" value="${name}" placeholder="名稱"><input type="number" class="input-field calc-re-input font-mono text-right text-xs w-2/3" value="${amount}" placeholder="市值(確切金額)"><button class="btn-delete" onclick="this.parentElement.remove(); calcMetrics();">✕</button>`;
             container.appendChild(row);
         }
 
         function calcAddDebt(name = '', amount = '') {
-            const container = document.getElementById('calc-debt-container');
-            const row = document.createElement('div');
+            const container = document.getElementById('calc-debt-container'); const row = document.createElement('div');
             row.className = 'flex gap-2 items-center calc-debt-row';
-            row.innerHTML = `
-                <input type="text" class="input-field text-xs w-1/3" value="${name}" placeholder="名稱 (例:車貸)">
-                <input type="number" class="input-field calc-debt-input font-mono text-right text-xs w-2/3" value="${amount}" placeholder="金額(確切金額)">
-                <button class="btn-delete" onclick="this.parentElement.remove(); calcMetrics();">✕</button>
-            `;
+            // 將負債欄位改為唯讀唯信同步控制，或允許由第三分頁連動
+            row.innerHTML = `<input type="text" class="input-field text-xs w-1/3" value="${name}" placeholder="名稱" readonly><input type="number" class="input-field calc-debt-input font-mono text-right text-xs w-2/3" value="${amount}" placeholder="金額" readonly>`;
             container.appendChild(row);
         }
 
         function calcMetrics() {
-            let reTotal = 0;
-            document.querySelectorAll('.calc-re-input').forEach(input => {
-                reTotal += parseFloat(input.value) || 0;
-            });
+            let reTotal = 0; document.querySelectorAll('.calc-re-input').forEach(i => reTotal += parseFloat(i.value) || 0);
             document.getElementById('calc-re-total').innerText = Math.floor(reTotal).toLocaleString();
 
             const usStockUsd = parseFloat(document.getElementById('calc-us-stock').value) || 0;
@@ -954,75 +823,391 @@
             const liquidTotal = cash + twStock + usStockTwd;
             document.getElementById('calc-liquid-total').innerText = Math.floor(liquidTotal).toLocaleString();
 
-            let debtTotal = 0;
-            document.querySelectorAll('.calc-debt-input').forEach(input => {
-                debtTotal += parseFloat(input.value) || 0;
-            });
+            let debtTotal = 0; document.querySelectorAll('.calc-debt-input').forEach(i => debtTotal += parseFloat(i.value) || 0);
             document.getElementById('calc-debt-total').innerText = Math.floor(debtTotal).toLocaleString();
 
             const expenses = parseFloat(document.getElementById('calc-expenses').value) || 0;
+            const totalAssets = reTotal + liquidTotal; const netAssets = totalAssets - debtTotal;
 
-            const totalAssets = reTotal + liquidTotal;
-            const netAssets = totalAssets - debtTotal;
-
-            const debtRatio = totalAssets > 0 ? (debtTotal / totalAssets) * 100 : 0;
-            document.getElementById('calc-res-debtratio').innerText = debtRatio.toFixed(2) + '%';
-
-            const leverage = netAssets > 0 ? (totalAssets / netAssets) : 0;
-            document.getElementById('calc-res-leverage').innerText = leverage.toFixed(2) + 'x';
-
-            const swr = liquidTotal > 0 ? (expenses / liquidTotal) * 100 : 0;
-            document.getElementById('calc-res-swr').innerText = swr.toFixed(2) + '%';
-
-            const survival = expenses > 0 ? (cash / expenses) : 0;
-            document.getElementById('calc-res-survival').innerText = survival.toFixed(1) + ' 年';
+            document.getElementById('calc-res-debtratio').innerText = (totalAssets > 0 ? (debtTotal / totalAssets) * 100 : 0).toFixed(2) + '%';
+            document.getElementById('calc-res-leverage').innerText = (netAssets > 0 ? (totalAssets / netAssets) : 0).toFixed(2) + 'x';
+            document.getElementById('calc-res-swr').innerText = (liquidTotal > 0 ? (expenses / liquidTotal) * 100 : 0).toFixed(2) + '%';
+            document.getElementById('calc-res-survival').innerText = (expenses > 0 ? (cash / expenses) : 0).toFixed(1) + ' 年';
         }
 
-        document.getElementById('pane-2').addEventListener('input', function(e) {
-            if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'number') {
-                calcMetrics();
-            }
-        });
-
-        function calcOpenModal() {
-            const modal = document.getElementById('calc-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.getElementById('calc-import-text').value = '';
-        }
-
-        function calcCloseModal() {
-            const modal = document.getElementById('calc-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
+        document.getElementById('pane-2').addEventListener('input', function(e) { if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'number') calcMetrics(); });
+        function calcOpenModal() { document.getElementById('calc-modal').classList.remove('hidden'); document.getElementById('calc-modal').classList.add('flex'); document.getElementById('calc-import-text').value = ''; }
+        function calcCloseModal() { document.getElementById('calc-modal').classList.add('hidden'); document.getElementById('calc-modal').classList.remove('flex'); }
 
         function calcProcessImport() {
             const text = document.getElementById('calc-import-text').value;
-            const extractNumber = (keyword) => {
-                const regex = new RegExp(keyword + '[^0-9]*([0-9]+(?:\\.[0-9]+)?)');
-                const match = text.match(regex);
-                return match ? parseFloat(match[1]) : null;
-            };
-
-            const parsedRe = extractNumber('房產|不動產|房子|市值');
-            const parsedExpenses = extractNumber('支出|花費|年支出');
-
-            if (parsedRe !== null) {
-                const firstReInput = document.querySelector('.calc-re-input');
-                if(firstReInput) firstReInput.value = parsedRe;
-            }
-            if (parsedExpenses !== null) {
-                document.getElementById('calc-expenses').value = parsedExpenses;
-            }
-
-            calcMetrics();
-            calcCloseModal();
+            const extractNumber = (keyword) => { const match = text.match(new RegExp(keyword + '[^0-9]*([0-9]+(?:\\.[0-9]+)?)')); return match ? parseFloat(match[1]) : null; };
+            const parsedRe = extractNumber('房產|不動產|房子|市值'); const parsedExpenses = extractNumber('支出|花費|年支出');
+            if (parsedRe !== null) { const firstReInput = document.querySelector('.calc-re-input'); if(firstReInput) firstReInput.value = parsedRe; }
+            if (parsedExpenses !== null) document.getElementById('calc-expenses').value = parsedExpenses;
+            calcMetrics(); calcCloseModal();
         }
-        
+    </script>
+
+
+    <!-- ======================= -->
+    <!-- 第 3 分頁：猷 & 玲總資產管理 與第二 GAS 整合腳本區 -->
+    <!-- ======================= -->
+    <script>
+        const YL_GAS_URL = 'https://script.google.com/macros/s/AKfycbzT-nQswx9GUQ8JHEp1zpr4HDXSHrz7s8kTqIe3FD9eUzqqNb7UlBGnSGoLqInyQ3i1/exec'; 
+        let ylFxRate = 32.5;
+        let ylLastMonthNet = 0; 
+        let ylFetchedHistory = [];
+        let isYlInitialized = false;
+
+        function ylGetNowString() {
+            const now = new Date(); const pad = (n) => n.toString().padStart(2, '0');
+            return `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        }
+
+        function ylInitSortable(id) {
+            const el = document.getElementById(id);
+            if(el) new Sortable(el, { handle: '.drag-handle', animation: 150, ghostClass: 'sortable-ghost', onEnd: () => { ylCalculate(); fetchExternalDebts(); } });
+        }
+
+        function ylToggleSubPage(page) {
+            const isHistory = (page === 'history');
+            document.getElementById('yl-page-edit').classList.toggle('hidden', isHistory);
+            document.getElementById('yl-page-history').classList.toggle('hidden', !isHistory);
+            document.getElementById('yl-nav-history').className = isHistory ? "text-xs font-bold text-purple-400 border-b-2 border-purple-400 pb-1 transition-all" : "text-xs font-bold text-slate-500 hover:text-white pb-1 transition-all";
+            document.getElementById('yl-nav-edit').className = !isHistory ? "text-xs font-bold text-purple-400 border-b-2 border-purple-400 pb-1 transition-all" : "text-xs font-bold text-slate-500 hover:text-white pb-1 transition-all";
+            if (isHistory) ylLoadHistoryTable();
+        }
+
+        async function ylFetchFxRate() {
+            try {
+                const response = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await response.json();
+                if (data && data.rates.TWD) {
+                    ylFxRate = data.rates.TWD;
+                    document.getElementById('yl-fx-rate-display').innerText = ylFxRate.toFixed(2);
+                    ylCalculate();
+                }
+            } catch (e) { document.getElementById('yl-fx-rate-display').innerText = "32.50"; }
+        }
+
+        function ylAddRow(containerId, placeholder = '項目名稱', name = '', amount = '') {
+            const container = document.getElementById(containerId);
+            if(!container) return;
+            const div = document.createElement('div');
+            div.className = "flex flex-col mb-3 yl-row-item";
+            const valAttr = (amount === '' || amount === 0 || amount === '0') ? '' : `value="${amount}"`;
+            div.innerHTML = `
+                <div class="flex gap-2 items-center">
+                    <span class="drag-handle">≡</span>
+                    <input type="text" class="input-field text-xs yl-item-name" value="${name}" placeholder="${placeholder}" oninput="ylCalculate(); fetchExternalDebts();">
+                    <input type="number" class="input-field w-32 font-mono text-right text-xs yl-item-amount" ${valAttr} placeholder="金額" oninput="ylCalculate(); fetchExternalDebts();">
+                    <span class="btn-delete text-[10px]" onclick="this.parentElement.parentElement.remove(); ylCalculate(); fetchExternalDebts();">✕</span>
+                </div>
+                <span class="usd-hint usd-label hidden"></span>
+            `;
+            container.appendChild(div);
+            ylCalculate();
+            fetchExternalDebts();
+        }
+
+        function ylCalculate() {
+            function getSums(selector) {
+                let currentSum = 0;
+                document.querySelectorAll(selector).forEach(parent => {
+                    const nameEl = parent.querySelector('.yl-item-name');
+                    const amountInput = parent.querySelector('.yl-item-amount');
+                    const hint = parent.querySelector('.usd-hint');
+                    if (!nameEl || !amountInput) return;
+                    const name = nameEl.value;
+                    let val = parseFloat(amountInput.value) || 0;
+                    let finalTwd = val;
+                    if (name.includes("美金定存")) {
+                        finalTwd = val * ylFxRate;
+                        if (val > 0) { hint.innerText = `≈ TWD ${Math.floor(finalTwd).toLocaleString()}`; hint.classList.remove('hidden'); } else { hint.classList.add('hidden'); }
+                    } else { if(hint) hint.classList.add('hidden'); }
+                    if (!name.includes("玲媽未投")) currentSum += finalTwd;
+                });
+                return currentSum;
+            }
+
+            const youBank = getSums('#yl-you-bank-list > div');
+            const youStockTW = parseFloat(document.getElementById('yl-you-stock-tw').value) || 0;
+            const youStockUS = parseFloat(document.getElementById('yl-you-stock-us').value) || 0;
+            const youStockUS_TWD = youStockUS * ylFxRate;
+            document.getElementById('yl-you-stock-us-twd').innerText = Math.floor(youStockUS_TWD).toLocaleString();
+            const youTotal = youBank + youStockTW + youStockUS_TWD;
+            document.getElementById('yl-you-total').innerText = Math.floor(youTotal).toLocaleString();
+
+            const lingBank = getSums('#yl-ling-bank-list > div'); 
+            let lingMaDeduct = 0;
+            document.querySelectorAll('#yl-ling-bank-list > div').forEach(parent => {
+                const nameInput = parent.querySelector('.yl-item-name');
+                if (nameInput && nameInput.value.includes("玲媽未投")) lingMaDeduct = parseFloat(parent.querySelector('.yl-item-amount').value) || 0;
+            });
+
+            const lingStock1 = parseFloat(document.getElementById('yl-ling-stock-1').value) || 0;
+            const lingStock2 = parseFloat(document.getElementById('yl-ling-stock-2').value) || 0;
+            const lingTotal = (lingBank + lingStock1 + lingStock2) - lingMaDeduct;
+            document.getElementById('yl-ling-total').innerText = Math.floor(lingTotal).toLocaleString();
+
+            let house = 0; document.querySelectorAll('#yl-loan-house-list .yl-item-amount').forEach(el => house += parseFloat(el.value) || 0);
+            document.getElementById('yl-loan-house-sum').innerText = Math.floor(house).toLocaleString();
+            let credit = 0; document.querySelectorAll('#yl-loan-credit-list .yl-item-amount').forEach(el => credit += parseFloat(el.value) || 0);
+            document.getElementById('yl-loan-credit-sum').innerText = Math.floor(credit).toLocaleString();
+            
+            const totalBank = youBank + lingBank;
+            const totalAsset = youTotal + lingTotal;
+            document.getElementById('yl-global-bank-sum').innerText = Math.floor(totalBank).toLocaleString();
+            document.getElementById('yl-global-asset-sum').innerText = Math.floor(totalAsset).toLocaleString();
+            
+            const netAsset = totalAsset - house - credit;
+            document.getElementById('yl-res-net').innerText = Math.floor(netAsset).toLocaleString();
+
+            const diff = netAsset - ylLastMonthNet; 
+            const diffEl = document.getElementById('yl-res-diff');
+            diffEl.innerText = Math.floor(diff).toLocaleString();
+            diffEl.className = "font-mono text-sm font-bold " + (diff >= 0 ? "text-emerald-400" : "text-red-400");
+            
+            // 每次計算時順便同步負債到分頁二
+            fetchExternalDebts();
+        }
+
+        async function ylSaveData() {
+            const status = document.getElementById('yl-sync-status');
+            const indicator = document.getElementById('yl-status-indicator');
+            const timeLabel = document.getElementById('yl-last-update-time');
+            if(status) { status.innerText = "同步連線中"; indicator.className = "status-dot status-syncing"; }
+            const nowStr = ylGetNowString();
+            const data = {
+                last_update: nowStr,
+                you_banks: Array.from(document.querySelectorAll('#yl-you-bank-list > div.yl-row-item')).map(d => ({ name: d.querySelector('.yl-item-name').value, amount: d.querySelector('.yl-item-amount').value })),
+                ling_banks: Array.from(document.querySelectorAll('#yl-ling-bank-list > div.yl-row-item')).map(d => ({ name: d.querySelector('.yl-item-name').value, amount: d.querySelector('.yl-item-amount').value })),
+                house_loans: Array.from(document.querySelectorAll('#yl-loan-house-list > div.yl-row-item')).map(d => ({ name: d.querySelector('.yl-item-name').value, amount: d.querySelector('.yl-item-amount').value })),
+                credit_loans: Array.from(document.querySelectorAll('#yl-loan-credit-list > div.yl-row-item')).map(d => ({ name: d.querySelector('.yl-item-name').value, amount: d.querySelector('.yl-item-amount').value })),
+                stocks: { you_tw: document.getElementById('yl-you-stock-tw').value, you_us: document.getElementById('yl-you-stock-us').value, ling_1: document.getElementById('yl-ling-stock-1').value, ling_2: document.getElementById('yl-ling-stock-2').value }
+            };
+            try {
+                await fetch(YL_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+                if(status) { 
+                    status.innerText = "已成功儲存"; indicator.className = "status-dot status-online"; timeLabel.innerText = "最後更新時間: " + nowStr;
+                    setTimeout(() => { if(status) status.innerText = "連線中"; }, 2000); 
+                }
+            } catch (e) { if(status) { status.innerText = "儲存失敗"; indicator.className = "status-dot status-error"; } }
+        }
+
+        async function ylArchiveHistory() {
+            if (!confirm("確認結算本月數據？系統將會先自動儲存當前明細。")) return;
+            try {
+                const nowStr = ylGetNowString();
+                const currentData = {
+                    last_update: nowStr,
+                    you_banks: Array.from(document.querySelectorAll('#yl-you-bank-list > div.yl-row-item')).map(d => ({ name: d.querySelector('.yl-item-name').value, amount: d.querySelector('.yl-item-amount').value })),
+                    ling_banks: Array.from(document.querySelectorAll('#yl-ling-bank-list > div.yl-row-item')).map(d => ({ name: d.querySelector('.yl-item-name').value, amount: d.querySelector('.yl-item-amount').value })),
+                    house_loans: Array.from(document.querySelectorAll('#yl-loan-house-list > div.yl-row-item')).map(d => ({ name: d.querySelector('.yl-item-name').value, amount: d.querySelector('.yl-item-amount').value })),
+                    credit_loans: Array.from(document.querySelectorAll('#yl-loan-credit-list > div.yl-row-item')).map(d => ({ name: d.querySelector('.yl-item-name').value, amount: d.querySelector('.yl-item-amount').value })),
+                    stocks: { you_tw: document.getElementById('yl-you-stock-tw').value, you_us: document.getElementById('yl-you-stock-us').value, ling_1: document.getElementById('yl-ling-stock-1').value, ling_2: document.getElementById('yl-ling-stock-2').value }
+                };
+                await fetch(YL_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(currentData) });
+                
+                const payload = {
+                    action: 'ARCHIVE_HISTORY',
+                    date: document.getElementById('yl-archive-date').value || new Date().toISOString().slice(0, 10),
+                    totalAsset: document.getElementById('yl-global-asset-sum').innerText.replace(/,/g, ''),
+                    totalBank: document.getElementById('yl-global-bank-sum').innerText.replace(/,/g, ''),
+                    netAsset: document.getElementById('yl-res-net').innerText.replace(/,/g, ''),
+                    netAssetExclHouse: 0,
+                    diff: document.getElementById('yl-res-diff').innerText.replace(/,/g, ''),
+                    fxRate: ylFxRate.toFixed(3),
+                    youTotal: document.getElementById('yl-you-total').innerText.replace(/,/g, ''),
+                    lingTotal: document.getElementById('yl-ling-total').innerText.replace(/,/g, ''),
+                    note: document.getElementById('yl-archive-note').value
+                };
+                await fetch(YL_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                alert("儲存並結算成功！");
+                ylLoadData(); 
+            } catch (e) { alert("結算失敗"); }
+        }
+
+        async function ylLoadHistoryTable() {
+            const tbody = document.getElementById('yl-history-table-body');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10">載入中...</td></tr>';
+            try {
+                const response = await fetch(`${YL_GAS_URL}?action=readHistory`);
+                const rows = await response.json();
+                ylFetchedHistory = rows; 
+                if (rows.length <= 1) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10">無紀錄</td></tr>'; return; }
+                tbody.innerHTML = '';
+                rows.slice(1).reverse().forEach(row => {
+                    let d = String(row[0]).replace(/-/g, '/');
+                    if(d.includes('T')) d = d.split('T')[0];
+                    const displayDate = d.slice(2); 
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td data-label="日期" class="text-white font-bold">${displayDate}</td>
+                        <td data-label="總資產" class="text-white font-bold">${row[1]}</td>
+                        <td data-label="淨資產(扣所有貸款)" class="text-purple-400 font-bold">${row[3]}</td>
+                        <td data-label="存款" class="text-emerald-400">${row[2]}</td>
+                        <td data-label="匯率" class="text-blue-300">${row[6] || '--'}</td>
+                        <td data-label="增減" class="${String(row[5]).includes('-') ? 'text-red-400' : 'text-emerald-400'} font-bold">${row[5]}</td>
+                        <td data-label="備註" class="note-cell" title="${row[9] || ''}">${row[9] || '-'}</td>`;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-400 py-10">讀取失敗</td></tr>'; }
+        }
+
+        function ylExportToExcel() {
+            if (ylFetchedHistory.length === 0) { alert("請先點擊「重新整理」以同步歷史紀錄數據"); return; }
+            const wb = XLSX.utils.book_new();
+            const detailRows = [];
+            for(let i=0; i<25; i++) detailRows.push(new Array(16).fill(""));
+
+            detailRows[0][0] = "猷";
+            detailRows[1][0] = "項目"; detailRows[1][1] = "金額";
+            detailRows[2][0] = "台股市值"; detailRows[2][1] = Number(document.getElementById('yl-you-stock-tw').value) || 0;
+            detailRows[3][0] = "美股市值(USD)"; detailRows[3][1] = Number(document.getElementById('yl-you-stock-us').value) || 0;
+            const youBanks = document.querySelectorAll('#yl-you-bank-list > div.yl-row-item');
+            youBanks.forEach((d, i) => { detailRows[4+i][0] = d.querySelector('.yl-item-name').value; detailRows[4+i][1] = Number(d.querySelector('.yl-item-amount').value) || 0; });
+            detailRows[1][2] = "猷總和"; detailRows[2][2] = Number(document.getElementById('yl-you-total').innerText.replace(/,/g, ''));
+            
+            detailRows[0][4] = "玲";
+            detailRows[1][4] = "項目"; detailRows[1][5] = "金額";
+            const lingBanks = document.querySelectorAll('#yl-ling-bank-list > div.yl-row-item');
+            lingBanks.forEach((d, i) => { detailRows[2+i][4] = d.querySelector('.yl-item-name').value; detailRows[2+i][5] = Number(d.querySelector('.yl-item-amount').value) || 0; });
+            let lingOffset = 2 + lingBanks.length;
+            detailRows[lingOffset][4] = "台股市值"; detailRows[lingOffset][5] = Number(document.getElementById('yl-ling-stock-1').value) || 0;
+            detailRows[lingOffset+1][4] = "雄獅配股"; detailRows[lingOffset+1][5] = Number(document.getElementById('yl-ling-stock-2').value) || 0;
+            detailRows[1][6] = "玲總和"; detailRows[2][6] = Number(document.getElementById('yl-ling-total').innerText.replace(/,/g, ''));
+            
+            detailRows[1][8] = "兩人總和"; detailRows[2][8] = Number(document.getElementById('yl-global-bank-sum').innerText.replace(/,/g, ''));
+            
+            detailRows[0][10] = "貸款";
+            detailRows[1][10] = "項目"; detailRows[1][11] = "金額";
+            const loans = [...document.querySelectorAll('#yl-loan-house-list > div.yl-row-item'), ...document.querySelectorAll('#yl-loan-credit-list > div.yl-row-item')];
+            loans.forEach((d, i) => { detailRows[2+i][10] = d.querySelector('.yl-item-name').value; detailRows[2+i][11] = Number(d.querySelector('.yl-item-amount').value) || 0; });
+
+            detailRows[1][13] = "貸款總和"; detailRows[1][14] = Number(document.getElementById('yl-global-asset-sum').innerText.replace(/,/g, '')) - Number(document.getElementById('yl-res-net').innerText.replace(/,/g, ''));
+            detailRows[2][13] = "現有總資產"; detailRows[2][14] = Number(document.getElementById('yl-global-asset-sum').innerText.replace(/,/g, ''));
+            detailRows[3][13] = "淨資產(扣除所有)"; detailRows[3][14] = Number(document.getElementById('yl-res-net').innerText.replace(/,/g, ''));
+            detailRows[4][13] = "現有存款(現金)"; detailRows[4][14] = Number(document.getElementById('yl-global-bank-sum').innerText.replace(/,/g, ''));
+            detailRows[5][13] = "美金匯率"; detailRows[5][14] = ylFxRate;
+
+            const wsDetail = XLSX.utils.aoa_to_sheet(detailRows);
+            XLSX.utils.book_append_sheet(wb, wsDetail, "資產負債明細");
+
+            const sortedHistory = ylFetchedHistory.slice(1).sort((a,b) => new Date(a[0]) - new Date(b[0]));
+            const currentYear = new Date().getFullYear();
+            const trendRows = [
+                [`${currentYear}年`],
+                ["月份", ...sortedHistory.map(r => (new Date(r[0]).getMonth() + 1) + "月")],
+                ["本月實際餘額", ...sortedHistory.map(r => Number(r[1]) || 0)],
+                ["本月淨資產", ...sortedHistory.map(r => Number(r[3]) || 0)],
+                ["本月現金", ...sortedHistory.map(r => Number(r[2]) || 0)],
+                ["淨資產增減", ...sortedHistory.map(r => Number(r[5]) || 0)],
+                ["美金匯率", ...sortedHistory.map(r => r[6] ? Number(r[6]) : "")],
+                ["猷 個人統計", ...sortedHistory.map(r => Number(r[7]) || 0)],
+                ["玲 個人統計", ...sortedHistory.map(r => Number(r[8]) || 0)],
+                ["備註", ...sortedHistory.map(r => r[9] || "")]
+            ];
+            const wsTrend = XLSX.utils.aoa_to_sheet(trendRows);
+            XLSX.utils.book_append_sheet(wb, wsTrend, "每月趨勢統計");
+            XLSX.writeFile(wb, `猷玲財務報表_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        async function ylLoadData() {
+            try {
+                const response = await fetch(YL_GAS_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const res = await response.json();
+                
+                ylLastMonthNet = res.lastMonthNet || 0; 
+                document.getElementById('yl-last-month-val').innerText = ylLastMonthNet.toLocaleString();
+                
+                const data = res.currentState || {};
+                if (data.last_update) document.getElementById('yl-last-update-time').innerText = "最後更新時間: " + data.last_update;
+                
+                document.getElementById('yl-you-bank-list').innerHTML = '';
+                if (data.you_banks?.length) data.you_banks.forEach(b => ylAddRow('yl-you-bank-list', '銀行', b.name, b.amount));
+                
+                document.getElementById('yl-ling-bank-list').innerHTML = '';
+                if (data.ling_banks?.length) data.ling_banks.forEach(b => ylAddRow('yl-ling-bank-list', '銀行', b.name, b.amount));
+                
+                document.getElementById('yl-loan-house-list').innerHTML = '';
+                if (data.house_loans?.length) data.house_loans.forEach(l => ylAddRow('yl-loan-house-list', '名稱', l.name, l.amount));
+                
+                document.getElementById('yl-loan-credit-list').innerHTML = '';
+                if (data.credit_loans?.length) data.credit_loans.forEach(l => ylAddRow('yl-loan-credit-list', '名稱', l.name, l.amount));
+                
+                if (data.stocks) {
+                    document.getElementById('yl-you-stock-tw').value = data.stocks.you_tw || '';
+                    document.getElementById('yl-you-stock-us').value = data.stocks.you_us || '';
+                    document.getElementById('yl-ling-stock-1').value = data.stocks.ling_1 || '';
+                    document.getElementById('yl-ling-stock-2').value = data.stocks.ling_2 || '';
+                }
+            } catch (e) { 
+                console.error("第三分頁載入失敗", e);
+                document.getElementById('yl-last-update-time').innerText = "最後更新時間: 讀取失敗 (請檢查GAS權限)"; 
+            }
+            
+            ylInitSortable('yl-you-bank-list'); ylInitSortable('yl-ling-bank-list'); ylInitSortable('yl-loan-house-list'); ylInitSortable('yl-loan-credit-list');
+            document.getElementById('yl-archive-date').value = new Date().toISOString().slice(0, 10);
+            ylCalculate();
+            fetchExternalDebts();
+        }
+    </script>
+
+
+    <!-- ======================= -->
+    <!-- 跨分頁管理系統 -->
+    <!-- ======================= -->
+    <script>
+        function switchTab(tabIndex) {
+            const panes = [document.getElementById('pane-1'), document.getElementById('pane-2'), document.getElementById('pane-3')];
+            const btns = [document.getElementById('btn-tab-1'), document.getElementById('btn-tab-2'), document.getElementById('btn-tab-3')];
+
+            panes.forEach((pane, idx) => {
+                if (idx + 1 === tabIndex) pane.classList.remove('hidden');
+                else pane.classList.add('hidden');
+            });
+
+            btns.forEach((btn, idx) => {
+                if (idx + 1 === tabIndex) {
+                    btn.className = "pb-3 text-sm font-bold tracking-widest uppercase border-b-2 transition-colors whitespace-nowrap";
+                    if(tabIndex === 1) btn.classList.add('border-blue-500', 'text-blue-400');
+                    if(tabIndex === 2) btn.classList.add('border-emerald-500', 'text-emerald-400');
+                    if(tabIndex === 3) btn.classList.add('border-purple-500', 'text-purple-400');
+                } else {
+                    btn.className = "pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap";
+                }
+            });
+            
+            if (tabIndex === 2 && !isCalcInitialized) {
+                calcFetchExchangeRate();
+                fetchExternalDebts();
+                isCalcInitialized = true;
+            } else if (tabIndex === 2) {
+                fetchExternalDebts();
+            }
+
+            if (tabIndex === 3 && !isYlInitialized) {
+                ylFetchFxRate();
+                ylLoadData();
+                isYlInitialized = true;
+            }
+        }
+
+        // 整體初始掛載
         window.addEventListener('load', () => {
+            fetchFxRate(); 
+            loadData(); 
+            initSortable();
             calcMetrics();
-            fetchExternalDebts(); // 網頁載入時自動非同步同步一次負債清單
+            
+            // 延遲執行一次以確保第三分頁 DOM 載入後能順利同步負債
+            setTimeout(() => {
+                ylFetchFxRate();
+                ylLoadData();
+            }, 500);
         });
     </script>
 </body>
