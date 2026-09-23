@@ -73,6 +73,9 @@
         /* 備註欄位：取消單行截斷限制，支援多行顯示 */
         .note-cell { min-width: 150px; font-size: 12px !important; color: #94a3b8; font-family: sans-serif !important; vertical-align: top; line-height: 1.6; }
 
+        /* 操作欄位樣式 */
+        .action-cell { white-space: nowrap; }
+
         @media (max-width: 640px) {
             #yl-history-table thead { display: none; }
             #yl-history-table-body { display: flex; flex-direction: column; gap: 16px; padding: 10px 4px; }
@@ -80,10 +83,12 @@
             #yl-history-table-body td { display: flex; justify-content: space-between; align-items: center; padding: 6px 0 !important; border: none !important; font-size: 15px !important; }
             #yl-history-table-body td:nth-child(1) { font-size: 18px !important; border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; margin-bottom: 8px; padding-bottom: 10px !important; color: #fff !important; }
             #yl-history-table-body td:nth-child(1)::before { content: "結算日期"; font-size: 10px; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; }
-            #yl-history-table-body td:not(:first-child)::before { content: attr(data-label); font-size: 12px; color: #94a3b8; font-weight: normal; font-family: sans-serif; }
+            #yl-history-table-body td:not(:first-child):not(.action-cell)::before { content: attr(data-label); font-size: 12px; color: #94a3b8; font-weight: normal; font-family: sans-serif; }
             
-            /* 手機版備註：靠上對齊以應對多行情況 */
+            /* 手機版備註與操作列 */
             .note-cell { max-width: 100%; text-align: right; align-items: flex-start !important; }
+            .action-cell { justify-content: flex-end !important; margin-top: 12px; padding-top: 12px !important; border-top: 1px solid rgba(255,255,255,0.05) !important; gap: 12px !important; }
+            .action-cell::before { display: none !important; }
         }
         .hidden { display: none; }
     </style>
@@ -280,34 +285,6 @@
                     </div>
                 </div>
             </div>
-            
-            <div id="page-history" class="hidden mt-8">
-                <div class="card p-4 md:p-6 rounded-2xl" id="history-container">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 px-2 gap-4">
-                        <h2 class="text-xl font-bold text-white tracking-widest">歷史紀錄</h2>
-                        <div class="flex gap-2">
-                            <button onclick="loadHistoryTable()" class="btn-action text-[10px]">重新整理</button>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table id="history-table">
-                            <thead>
-                                <tr>
-                                    <th>日期</th>
-                                    <th>總資產</th>
-                                    <th>淨資產(扣所有貸款)</th>
-                                    <th>存款</th>
-                                    <th>匯率</th>
-                                    <th>增減</th>
-                                    <th>備註</th>
-                                </tr>
-                            </thead>
-                            <tbody id="history-table-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
         </div>
         
         <!-- ======================= -->
@@ -547,6 +524,7 @@
                                     <th>匯率</th>
                                     <th>增減</th>
                                     <th>備註</th>
+                                    <th>操作</th>
                                 </tr>
                             </thead>
                             <tbody id="yl-history-table-body"></tbody>
@@ -736,34 +714,6 @@
                 if(status) status.innerText = "儲存失敗"; 
                 if(calcStatus) calcStatus.innerText = "儲存失敗"; 
             }
-        }
-
-        async function loadHistoryTable() {
-            const tbody = document.getElementById('history-table-body');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10">載入中...</td></tr>';
-            try {
-                const response = await fetch(`${MAIN_GAS_URL}?action=readHistory`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const rows = await response.json();
-                if (rows.length <= 1) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10">無紀錄</td></tr>'; return; }
-                tbody.innerHTML = '';
-                rows.slice(1).reverse().forEach(row => {
-                    let d = String(row[0]).replace(/-/g, '/');
-                    if(d.includes('T')) d = d.split('T')[0];
-                    const displayDate = d.slice(2); 
-                    const tr = document.createElement('tr');
-                    
-                    tr.innerHTML = `
-                        <td data-label="日期" class="text-white font-bold">${displayDate}</td>
-                        <td data-label="總資產" class="text-white font-bold">${row[1] || '0'}</td>
-                        <td data-label="淨資產(扣所有貸款)" class="text-blue-400 font-bold">${row[2] || '0'}</td>
-                        <td data-label="存款" class="text-emerald-400">${row[3] || '0'}</td>
-                        <td data-label="匯率" class="text-blue-300">${row[4] || '--'}</td>
-                        <td data-label="增減" class="${String(row[5]).includes('-') ? 'text-red-400' : 'text-emerald-400'} font-bold">${row[5] || '0'}</td>
-                        <td data-label="備註" class="note-cell" title="${String(row[9] || '').replace(/"/g, '&quot;')}"><div class="text-right sm:text-left">${String(row[9] || '-').replace(/\n/g, '<br>')}</div></td>`;
-                    tbody.appendChild(tr);
-                });
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-400 py-10">讀取失敗</td></tr>'; }
         }
 
         async function loadData() {
@@ -1023,7 +973,6 @@
             diffEl.innerText = Math.floor(diff).toLocaleString();
             diffEl.className = "font-mono text-sm font-bold " + (diff >= 0 ? "text-emerald-400" : "text-red-400");
             
-            // 每次計算時順便同步負債到分頁二
             fetchExternalDebts();
         }
 
@@ -1085,32 +1034,114 @@
 
         async function ylLoadHistoryTable() {
             const tbody = document.getElementById('yl-history-table-body');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10">載入中...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-10">載入中...</td></tr>';
             try {
                 const response = await fetch(`${YL_GAS_URL}?action=readHistory`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const rows = await response.json();
                 ylFetchedHistory = rows; 
-                if (rows.length <= 1) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10">無紀錄</td></tr>'; return; }
+                if (rows.length <= 1) { tbody.innerHTML = '<tr><td colspan="8" class="text-center py-10">無紀錄</td></tr>'; return; }
                 tbody.innerHTML = '';
-                rows.slice(1).reverse().forEach(row => {
+                
+                rows.slice(1).reverse().forEach((row, index) => {
+                    const actualIndex = rows.length - 1 - index; // 取得在 ylFetchedHistory 中的實際索引
                     let d = String(row[0]).replace(/-/g, '/');
                     if(d.includes('T')) d = d.split('T')[0];
                     const displayDate = d.slice(2); 
                     const tr = document.createElement('tr');
+                    tr.id = `yl-hist-row-${actualIndex}`;
                     
                     tr.innerHTML = `
-                        <td data-label="日期" class="text-white font-bold">${displayDate}</td>
+                        <td data-label="日期" class="text-white font-bold w-full sm:w-auto">${displayDate}</td>
                         <td data-label="總資產" class="text-white font-bold">${row[1] || '0'}</td>
                         <td data-label="淨資產(扣所有貸款)" class="text-purple-400 font-bold">${row[3] || '0'}</td>
                         <td data-label="存款" class="text-emerald-400">${row[2] || '0'}</td>
                         <td data-label="匯率" class="text-blue-300">${row[6] || '--'}</td>
                         <td data-label="增減" class="${String(row[5]).includes('-') ? 'text-red-400' : 'text-emerald-400'} font-bold">${row[5] || '0'}</td>
-                        <td data-label="備註" class="note-cell" title="${String(row[9] || '').replace(/"/g, '&quot;')}"><div class="text-right sm:text-left">${String(row[9] || '-').replace(/\n/g, '<br>')}</div></td>`;
+                        <td data-label="備註" class="note-cell" title="${String(row[9] || '').replace(/"/g, '&quot;')}"><div class="text-right sm:text-left">${String(row[9] || '-').replace(/\n/g, '<br>')}</div></td>
+                        <td data-label="操作" class="action-cell flex gap-2 sm:justify-start mt-2 sm:mt-0 pt-3 sm:pt-0 w-full sm:w-auto">
+                            <button onclick="ylEditHistory(${actualIndex})" class="bg-blue-600/80 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs transition">編輯</button>
+                            <button onclick="ylDeleteHistory(${actualIndex})" class="bg-red-600/80 hover:bg-red-500 text-white px-3 py-1 rounded text-xs transition">刪除</button>
+                        </td>`;
                     tbody.appendChild(tr);
                 });
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-400 py-10">讀取失敗</td></tr>'; }
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-400 py-10">讀取失敗</td></tr>'; }
         }
+
+        // --- 新增：編輯單筆歷史紀錄 UI 轉換 ---
+        window.ylEditHistory = function(index) {
+            const row = ylFetchedHistory[index];
+            const tr = document.getElementById(`yl-hist-row-${index}`);
+            if (!tr || !row) return;
+
+            let d = String(row[0]).replace(/-/g, '/');
+            if(d.includes('T')) d = d.split('T')[0];
+
+            // 將該列轉換為輸入框模式，並支援手機版排版
+            tr.innerHTML = `
+                <td data-label="日期" class="w-full sm:w-auto pb-4 sm:pb-2 border-b border-white/10 sm:border-0"><input type="text" class="input-field text-xs w-full sm:w-28 text-right sm:text-left ml-auto" value="${d}" id="edit-date-${index}"></td>
+                <td data-label="總資產"><input type="number" class="input-field text-xs w-32 sm:w-full ml-auto text-right sm:text-left" value="${row[1] || ''}" id="edit-total-${index}"></td>
+                <td data-label="淨資產"><input type="number" class="input-field text-xs w-32 sm:w-full ml-auto text-right sm:text-left text-purple-400 font-bold" value="${row[3] || ''}" id="edit-net-${index}"></td>
+                <td data-label="存款"><input type="number" class="input-field text-xs w-32 sm:w-full ml-auto text-right sm:text-left" value="${row[2] || ''}" id="edit-bank-${index}"></td>
+                <td data-label="匯率"><input type="number" class="input-field text-xs w-24 sm:w-full ml-auto text-right sm:text-left" step="0.001" value="${row[6] || ''}" id="edit-fx-${index}"></td>
+                <td data-label="增減"><input type="number" class="input-field text-xs w-32 sm:w-full ml-auto text-right sm:text-left" value="${row[5] || ''}" id="edit-diff-${index}"></td>
+                <td data-label="備註" class="flex-col !items-end sm:!items-start w-full sm:w-auto"><textarea class="input-field text-xs w-full sm:w-48 h-16 mt-1 sm:mt-0 text-right sm:text-left resize-y" id="edit-note-${index}">${row[9] || ''}</textarea></td>
+                <td data-label="操作" class="action-cell flex gap-2 sm:justify-start mt-2 pt-3 border-t border-white/10 sm:border-0 w-full sm:w-auto">
+                    <button onclick="ylSaveEditHistory(${index})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded text-xs font-bold w-full sm:w-auto">儲存更新</button>
+                    <button onclick="ylLoadHistoryTable()" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-1.5 rounded text-xs w-full sm:w-auto">取消</button>
+                </td>
+            `;
+        };
+
+        // --- 新增：儲存編輯紀錄 ---
+        window.ylSaveEditHistory = async function(index) {
+            const row = ylFetchedHistory[index];
+            const originalDate = row[0]; // 用原始日期當作識別 Key
+            
+            const payload = {
+                action: 'UPDATE_HISTORY',
+                originalDate: originalDate,
+                date: document.getElementById(`edit-date-${index}`).value,
+                totalAsset: document.getElementById(`edit-total-${index}`).value,
+                netAsset: document.getElementById(`edit-net-${index}`).value,
+                totalBank: document.getElementById(`edit-bank-${index}`).value,
+                fxRate: document.getElementById(`edit-fx-${index}`).value,
+                diff: document.getElementById(`edit-diff-${index}`).value,
+                note: document.getElementById(`edit-note-${index}`).value
+            };
+            
+            try {
+                // 發送更新請求至 GAS
+                await fetch(YL_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                alert('更新指令已發送！');
+                setTimeout(ylLoadHistoryTable, 1000); // 延遲刷新表格
+            } catch(e) {
+                alert('更新發送失敗，請檢查網路狀態。');
+            }
+        };
+
+        // --- 新增：刪除單筆歷史紀錄 ---
+        window.ylDeleteHistory = async function(index) {
+            const row = ylFetchedHistory[index];
+            let d = String(row[0]).replace(/-/g, '/');
+            if(d.includes('T')) d = d.split('T')[0];
+            
+            if(!confirm(`確定要永久刪除「${d}」這筆結算紀錄嗎？`)) return;
+            
+            const payload = {
+                action: 'DELETE_HISTORY',
+                date: row[0] // 用原始日期當作識別 Key
+            };
+            
+            try {
+                // 發送刪除請求至 GAS
+                await fetch(YL_GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                alert('刪除指令已發送！');
+                setTimeout(ylLoadHistoryTable, 1000); // 延遲刷新表格
+            } catch(e) {
+                alert('刪除發送失敗，請檢查網路狀態。');
+            }
+        };
 
         function ylExportToExcel() {
             if (ylFetchedHistory.length === 0) { alert("請先點擊「重新整理」以同步歷史紀錄數據"); return; }
@@ -1208,7 +1239,6 @@
             ylInitSortable('yl-you-bank-list'); ylInitSortable('yl-ling-bank-list'); ylInitSortable('yl-loan-house-list'); ylInitSortable('yl-loan-credit-list');
             document.getElementById('yl-archive-date').value = new Date().toISOString().slice(0, 10);
             ylCalculate();
-            fetchExternalDebts();
         }
     </script>
 
