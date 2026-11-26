@@ -460,6 +460,15 @@
             font-weight: 600;
         }
 
+        .ck-tag-us {
+            background-color: rgba(59, 130, 246, 0.22);
+            color: #60a5fa;
+            font-size: 10px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
         .ck-cell-right {
             text-align: right;
             display: flex;
@@ -780,7 +789,10 @@
                                     </div>
                                     <div>
                                         <label class="text-[10px] text-amber-500 mb-1 block uppercase font-bold">美股目前市值 (USD)</label>
-                                        <input type="number" id="input-us-market-usd" class="input-field font-mono border-amber-500/30 text-amber-400" placeholder="輸入目前市值" oninput="calculateWithMarketValue()">
+                                        <div class="flex gap-2">
+                                            <input type="number" id="input-us-market-usd" class="input-field font-mono border-amber-500/30 text-amber-400" placeholder="輸入目前市值" oninput="calculateWithMarketValue()">
+                                            <button type="button" onclick="syncCkUsMarketValue()" class="btn-quick-add !mt-0 whitespace-nowrap px-3 font-semibold !text-amber-400 !border-amber-500/30 !bg-amber-500/10 hover:!bg-amber-500/20" title="一鍵帶入籌碼K線中最新美股庫存總市值">帶入庫存市值</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden mt-2">
@@ -1133,7 +1145,7 @@
                         <div class="ck-summary-sub ck-num" id="ck-totalAccPct">0.00%</div>
                     </div>
                     <div class="ck-summary-col">
-                        <div class="ck-summary-label">股票市值</div>
+                        <div class="ck-summary-label" id="ck-marketValueLabel">股票市值</div>
                         <div class="ck-summary-value ck-num" id="ck-totalMarketValue">0</div>
                         <div class="ck-summary-sub ck-num" style="color: var(--ck-text-secondary);" id="ck-totalCostValue">成本 0</div>
                     </div>
@@ -1234,7 +1246,7 @@
                 </div>
                 <div class="ck-form-row">
                     <div class="ck-form-group">
-                        <label class="ck-form-label">目前現價</label>
+                        <label class="ck-form-label">目前現價 / 前日正規盤收盤</label>
                         <input type="number" step="any" class="ck-form-input" id="ck-fieldPrice" required placeholder="7.98" />
                     </div>
                     <div class="ck-form-group">
@@ -1353,6 +1365,21 @@
             document.getElementById('input-tw-market').value = roundedMv;
             calculate();
             ckShowToast(`已帶入最新台股庫存市值：${roundedMv.toLocaleString()} TWD`);
+        }
+
+        function syncCkUsMarketValue() {
+            if (typeof ckHoldings === 'undefined' || !Array.isArray(ckHoldings)) {
+                ckShowToast('尚未載入籌碼K線庫存資料');
+                return;
+            }
+            const usTotalMv = ckHoldings
+                .filter(item => item.market === 'US')
+                .reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.shares) || 0)), 0);
+
+            const roundedUsdMv = Number(usTotalMv.toFixed(2));
+            document.getElementById('input-us-market-usd').value = roundedUsdMv;
+            calculateWithMarketValue();
+            ckShowToast(`已帶入最新美股庫存市值：$${roundedUsdMv.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`);
         }
 
         function addRow(type, name = '', amount = '') {
@@ -1942,13 +1969,31 @@
     <!-- 第 4 分頁：籌碼K線即時庫存專屬腳本區 -->
     <!-- ======================= -->
     <script>
-        const CK_STORAGE_KEY = 'tw_stock_portfolio_v3';
+        const CK_STORAGE_KEY = 'tw_stock_portfolio_v4';
+        const CK_PREV_STORAGE_KEY = 'tw_stock_portfolio_v3';
         const CK_GAS_URL_KEY = 'tw_stock_gas_url_v3';
         const CK_DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz3Pe-RuAB9agJ1mZBJM1pzS68ZOcCLaV3od6aXKqzlm-JxZWDKApu7im6lYil4FJgTeg/exec';
 
         const CK_CHART_COLORS = [
             '#2596be', '#f59e0b', '#10b981', '#ef4444',
-            '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
+            '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16',
+            '#3b82f6', '#f97316', '#14b8a6', '#a855f7',
+            '#e11d48', '#0284c7'
+        ];
+
+        const CK_DEFAULT_US_HOLDINGS = [
+            { code: 'AMDL', name: 'GraniteShares 2x Long AMD', market: 'US', shares: 81, avgCost: 49.68, price: 49.68, prevClose: 49.68 },
+            { code: 'GGLL', name: 'Direxion Daily GOOGL Bull 2X', market: 'US', shares: 14, avgCost: 144.56, price: 144.56, prevClose: 144.56 },
+            { code: 'INTW', name: 'GraniteShares 2x Long INTC', market: 'US', shares: 104, avgCost: 43.28, price: 43.28, prevClose: 43.28 },
+            { code: 'MUU', name: 'Direxion Daily MU Bull 2X', market: 'US', shares: 100, avgCost: 35.00, price: 35.00, prevClose: 35.00 },
+            { code: 'NVDA', name: 'NVIDIA 英偉達', market: 'US', shares: 6, avgCost: 199.00, price: 199.00, prevClose: 199.00 },
+            { code: 'NVDL', name: 'GraniteShares 2x Long NVDA', market: 'US', shares: 69, avgCost: 37.77, price: 37.77, prevClose: 37.77 },
+            { code: 'SNXX', name: 'Defiance Daily Target 2X Long SNPS', market: 'US', shares: 156, avgCost: 29.24, price: 29.24, prevClose: 29.24 },
+            { code: 'SOXL', name: 'Direxion Daily Semiconductor Bull 3X', market: 'US', shares: 24, avgCost: 183.90, price: 183.90, prevClose: 183.90 },
+            { code: 'TQQQ', name: 'ProShares UltraPro QQQ 3X', market: 'US', shares: 27, avgCost: 55.23, price: 55.23, prevClose: 55.23 },
+            { code: 'TSLL', name: 'Direxion Daily TSLA Bull 2X', market: 'US', shares: 136, avgCost: 12.48, price: 12.48, prevClose: 12.48 },
+            { code: 'TSMX', name: 'Direxion Daily TSM Bull 2X', market: 'US', shares: 57, avgCost: 86.57, price: 86.57, prevClose: 86.57 },
+            { code: 'USD', name: 'ProShares Ultra Semiconductors 2X', market: 'US', shares: 54, avgCost: 88.59, price: 88.59, prevClose: 88.59 }
         ];
 
         const CK_DEFAULT_HOLDINGS = [
@@ -1969,7 +2014,8 @@
                 avgCost: 75.90,
                 price: 91.50,
                 prevClose: 90.30
-            }
+            },
+            ...CK_DEFAULT_US_HOLDINGS
         ];
 
         let ckHoldings = [];
@@ -1981,11 +2027,28 @@
 
         function ckLoadHoldings() {
             try {
-                const raw = localStorage.getItem(CK_STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
+                const rawV4 = localStorage.getItem(CK_STORAGE_KEY);
+                if (rawV4) {
+                    const parsed = JSON.parse(rawV4);
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         ckHoldings = parsed;
+                        return;
+                    }
+                }
+                // 若從舊版 v3 升級，保留原本台股設定並自動補入 12 檔美股
+                const rawV3 = localStorage.getItem(CK_PREV_STORAGE_KEY);
+                if (rawV3) {
+                    const parsedV3 = JSON.parse(rawV3);
+                    if (Array.isArray(parsedV3) && parsedV3.length > 0) {
+                        const existingCodes = new Set(parsedV3.map(i => i.code.toUpperCase()));
+                        const merged = [...parsedV3];
+                        CK_DEFAULT_US_HOLDINGS.forEach(usItem => {
+                            if (!existingCodes.has(usItem.code.toUpperCase())) {
+                                merged.push(JSON.parse(JSON.stringify(usItem)));
+                            }
+                        });
+                        ckHoldings = merged;
+                        ckSaveHoldings();
                         return;
                     }
                 }
@@ -2019,7 +2082,13 @@
             if (el) el.textContent = str;
         }
 
-        function ckFormatSignedInt(num) {
+        function ckFormatSignedMoney(num, isUsd = false) {
+            if (isUsd) {
+                const absStr = Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                if (num > 0.004) return '+$' + absStr;
+                if (num < -0.004) return '-$' + absStr;
+                return '$0.00';
+            }
             const rounded = Math.round(num);
             const absStr = Math.abs(rounded).toLocaleString('en-US');
             if (rounded > 0) return '+' + absStr;
@@ -2039,7 +2108,8 @@
             return 'ck-color-flat';
         }
 
-        function ckGetTickSize(price) {
+        function ckGetTickSize(price, isUs = false) {
+            if (isUs) return 0.01;
             if (price < 10) return 0.01;
             if (price < 50) return 0.05;
             if (price < 100) return 0.1;
@@ -2050,6 +2120,8 @@
 
         function ckRenderAll(flashMap = {}) {
             const visible = ckHoldings.filter(item => ckCurrentFilter === 'ALL' || item.market === ckCurrentFilter);
+            const isUsTab = ckCurrentFilter === 'US';
+            const fx = (typeof currentFxRate === 'number' && currentFxRate > 0) ? currentFxRate : 32.5;
 
             let totalMarketVal = 0;
             let totalCostVal = 0;
@@ -2057,12 +2129,14 @@
             let totalPrevMarketVal = 0;
 
             visible.forEach(item => {
-                const mv = item.price * item.shares;
-                const cost = item.avgCost * item.shares;
-                const prevMv = item.prevClose * item.shares;
+                // 在「資產(ALL)」分頁時將美股折算為台幣；在「美股(US)」分頁時維持純美元計算
+                const mult = (ckCurrentFilter === 'ALL' && item.market === 'US') ? fx : 1;
+                const mv = item.price * item.shares * mult;
+                const cost = item.avgCost * item.shares * mult;
+                const prevMv = item.prevClose * item.shares * mult;
                 totalMarketVal += mv;
                 totalCostVal += cost;
-                totalTodayPnl += (item.price - item.prevClose) * item.shares;
+                totalTodayPnl += (item.price - item.prevClose) * item.shares * mult;
                 totalPrevMarketVal += prevMv;
             });
 
@@ -2072,20 +2146,26 @@
 
             const elTodayPnl = document.getElementById('ck-totalTodayPnl');
             const elTodayPct = document.getElementById('ck-totalTodayPct');
-            elTodayPnl.textContent = ckFormatSignedInt(totalTodayPnl);
+            elTodayPnl.textContent = ckFormatSignedMoney(totalTodayPnl, isUsTab);
             elTodayPct.textContent = ckFormatSignedPct(totalTodayPct);
             elTodayPnl.className = 'ck-summary-value ck-num ' + ckGetColorClass(totalTodayPnl);
             elTodayPct.className = 'ck-summary-sub ck-num ' + ckGetColorClass(totalTodayPnl);
 
             const elAccPnl = document.getElementById('ck-totalAccPnl');
             const elAccPct = document.getElementById('ck-totalAccPct');
-            elAccPnl.textContent = ckFormatSignedInt(totalAccPnl);
+            elAccPnl.textContent = ckFormatSignedMoney(totalAccPnl, isUsTab);
             elAccPct.textContent = ckFormatSignedPct(totalAccPct);
             elAccPnl.className = 'ck-summary-value ck-num ' + ckGetColorClass(totalAccPnl);
             elAccPct.className = 'ck-summary-sub ck-num ' + ckGetColorClass(totalAccPnl);
 
-            document.getElementById('ck-totalMarketValue').textContent = Math.round(totalMarketVal).toLocaleString('en-US');
-            document.getElementById('ck-totalCostValue').textContent = '成本 ' + Math.round(totalCostVal).toLocaleString('en-US');
+            document.getElementById('ck-marketValueLabel').textContent = isUsTab ? '美股市值 (USD)' : (ckCurrentFilter === 'ALL' ? '總市值 (TWD)' : '股票市值');
+            if (isUsTab) {
+                document.getElementById('ck-totalMarketValue').textContent = '$' + totalMarketVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('ck-totalCostValue').textContent = '成本 $' + totalCostVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } else {
+                document.getElementById('ck-totalMarketValue').textContent = Math.round(totalMarketVal).toLocaleString('en-US');
+                document.getElementById('ck-totalCostValue').textContent = '成本 ' + Math.round(totalCostVal).toLocaleString('en-US');
+            }
 
             // Donut Chart & Legends
             const legendList = document.getElementById('ck-legendList');
@@ -2096,12 +2176,17 @@
                 donutRing.style.background = '#2b303d';
                 legendList.innerHTML = '<div style="font-size:12px;color:var(--ck-text-muted)">尚無符合條件的持股</div>';
             } else {
-                const sortedForChart = [...visible].sort((a, b) => (b.price * b.shares) - (a.price * a.shares));
+                const sortedForChart = [...visible].sort((a, b) => {
+                    const multA = (ckCurrentFilter === 'ALL' && a.market === 'US') ? fx : 1;
+                    const multB = (ckCurrentFilter === 'ALL' && b.market === 'US') ? fx : 1;
+                    return (b.price * b.shares * multB) - (a.price * a.shares * multA);
+                });
                 let accPct = 0;
                 const stops = [];
 
                 sortedForChart.forEach((item, idx) => {
-                    const mv = item.price * item.shares;
+                    const mult = (ckCurrentFilter === 'ALL' && item.market === 'US') ? fx : 1;
+                    const mv = item.price * item.shares * mult;
                     const pct = (mv / totalMarketVal) * 100;
                     const color = CK_CHART_COLORS[idx % CK_CHART_COLORS.length];
                     const start = accPct;
@@ -2113,9 +2198,9 @@
                     row.innerHTML = `
                         <div class="ck-legend-left">
                             <span class="ck-legend-dot" style="background:${color}"></span>
-                            <span class="ck-legend-name">${item.name}</span>
+                            <span class="ck-legend-name">${item.market === 'US' ? item.code : item.name}</span>
                         </div>
-                        <span class="ck-legend-pct ck-num">${Math.round(pct)}%</span>
+                        <span class="ck-legend-pct ck-num">${pct >= 1 ? Math.round(pct) : pct.toFixed(1)}%</span>
                     `;
                     legendList.appendChild(row);
                 });
@@ -2137,6 +2222,7 @@
 
             visible.forEach(item => {
                 const realIndex = ckHoldings.indexOf(item);
+                const isItemUs = item.market === 'US';
                 const todayPnl = (item.price - item.prevClose) * item.shares;
                 const dayChangePct = item.prevClose > 0 ? ((item.price - item.prevClose) / item.prevClose) * 100 : 0;
                 const totalPnl = (item.price - item.avgCost) * item.shares;
@@ -2145,7 +2231,7 @@
 
                 const dayColor = ckGetColorClass(todayPnl);
                 const totalColor = ckGetColorClass(totalPnl);
-                const priceDecimals = item.price < 50 ? 2 : (item.price < 500 ? 2 : 1);
+                const priceDecimals = isItemUs ? 2 : (item.price < 50 ? 2 : (item.price < 500 ? 2 : 1));
 
                 const row = document.createElement('div');
                 row.className = 'ck-stock-row';
@@ -2153,28 +2239,32 @@
                 if (flashMap[item.code] === 'down') row.classList.add('ck-flash-down');
                 row.onclick = () => ckOpenStockModal(realIndex);
 
+                const qtyText = isItemUs
+                    ? `庫存：${item.shares.toLocaleString('en-US')} 股 ｜ 市值：$${(item.price * item.shares).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : `庫存：${item.shares.toLocaleString('en-US')} 股 (${lots} 張)`;
+
                 row.innerHTML = `
                     <div>
-                        <div class="ck-stock-name">${item.name}</div>
+                        <div class="ck-stock-name">${isItemUs ? item.code : item.name}</div>
                         <div class="ck-stock-meta">
-                            <span class="ck-tag-spot">${item.market === 'US' ? '美' : '現'}</span>
-                            <span class="ck-num">${item.code}</span>
+                            <span class="${isItemUs ? 'ck-tag-us' : 'ck-tag-spot'}">${isItemUs ? '美' : '現'}</span>
+                            <span class="ck-num">${isItemUs ? item.name : item.code}</span>
                         </div>
                     </div>
                     <div class="ck-cell-right">
-                        <div class="ck-val-main ck-num ${dayColor}">${ckFormatSignedInt(todayPnl)}</div>
+                        <div class="ck-val-main ck-num ${dayColor}">${ckFormatSignedMoney(todayPnl, isItemUs)}</div>
                     </div>
                     <div class="ck-cell-right">
-                        <div class="ck-val-main ck-num ${dayColor}">${item.price.toFixed(priceDecimals)}</div>
+                        <div class="ck-val-main ck-num ${dayColor}">${isItemUs ? '$' : ''}${item.price.toFixed(priceDecimals)}</div>
                         <div class="ck-val-sub ck-num ${dayColor}">${Math.abs(dayChangePct).toFixed(2)}%</div>
                     </div>
                     <div class="ck-cell-right">
-                        <div class="ck-val-main ck-num ${totalColor}">${ckFormatSignedInt(totalPnl)}</div>
+                        <div class="ck-val-main ck-num ${totalColor}">${ckFormatSignedMoney(totalPnl, isItemUs)}</div>
                         <div class="ck-val-sub ck-num ${totalColor}">${ckFormatSignedPct(totalRoi)}</div>
                     </div>
                     <div class="ck-holding-detail-bar ck-num">
-                        <span>庫存：${item.shares.toLocaleString('en-US')} 股 (${lots} 張)</span>
-                        <span>均價：${item.avgCost} ｜ 昨收：${item.prevClose}</span>
+                        <span>${qtyText}</span>
+                        <span>均價：${isItemUs ? '$' + item.avgCost.toFixed(2) : item.avgCost} ｜ 昨收：${isItemUs ? '$' + item.prevClose.toFixed(2) : item.prevClose}</span>
                     </div>
                 `;
                 listEl.appendChild(row);
@@ -2242,7 +2332,9 @@
             const flashMap = {};
 
             ckHoldings.forEach(item => {
-                const tick = ckGetTickSize(item.price);
+                // 美股僅保留前一日正規盤收盤價，模擬跳動僅針對台股測試
+                if (item.market === 'US') return;
+                const tick = ckGetTickSize(item.price, false);
                 const dir = Math.random() < 0.52 ? 1 : -1;
                 const steps = Math.floor(Math.random() * 2) + 1;
                 const nextPrice = Math.max(tick, Number((item.price + dir * steps * tick).toFixed(4)));
@@ -2321,7 +2413,7 @@
             } else {
                 document.getElementById('ck-stockModalTitle').textContent = '新增庫存持股';
                 document.getElementById('ck-stockForm').reset();
-                document.getElementById('ck-fieldMarket').value = 'TW';
+                document.getElementById('ck-fieldMarket').value = ckCurrentFilter === 'US' ? 'US' : 'TW';
                 delBtn.style.display = 'none';
             }
             document.getElementById('ck-stockModal').classList.add('open');
@@ -2434,7 +2526,7 @@
         }
 
         function ckResetDefaultHoldings() {
-            if (confirm('確定要重置為初始範例庫存（00685L 與 0050）嗎？')) {
+            if (confirm('確定要重置為初始範例庫存（含台股與 12 檔美股）嗎？')) {
                 ckHoldings = JSON.parse(JSON.stringify(CK_DEFAULT_HOLDINGS));
                 ckSaveHoldings();
                 ckRenderAll();
