@@ -91,6 +91,541 @@
             .action-cell::before { display: none !important; }
         }
         .hidden { display: none; }
+
+        /* ======================= */
+        /* 第四分頁：籌碼K線即時庫存專屬樣式 (.ck- 命名空間隔離) */
+        /* ======================= */
+        #pane-4 {
+            --ck-bg-main: #0e1014;
+            --ck-bg-card: #181b22;
+            --ck-bg-elevated: #222630;
+            --ck-border-color: #2b303d;
+            --ck-text-primary: #f3f4f6;
+            --ck-text-secondary: #9ca3af;
+            --ck-text-muted: #6b7280;
+            --ck-up-red: #f04444;
+            --ck-up-red-bg: rgba(240, 68, 68, 0.16);
+            --ck-down-green: #16c784;
+            --ck-down-green-bg: rgba(22, 199, 132, 0.16);
+            --ck-accent-gold: #f59e0b;
+        }
+
+        .ck-shell {
+            width: 100%;
+            max-width: 560px;
+            margin: 0 auto;
+            background-color: var(--ck-bg-main);
+            color: var(--ck-text-primary);
+            border: 1px solid var(--ck-border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ck-num {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum";
+        }
+
+        .ck-color-up { color: var(--ck-up-red) !important; }
+        .ck-color-down { color: var(--ck-down-green) !important; }
+        .ck-color-flat { color: var(--ck-text-primary) !important; }
+
+        .ck-top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background-color: var(--ck-bg-main);
+            border-bottom: 1px solid var(--ck-border-color);
+        }
+
+        .ck-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .ck-brand-badge {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #111;
+            font-size: 12px;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 5px;
+        }
+
+        .ck-status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--ck-bg-card);
+            border: 1px solid var(--ck-border-color);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            color: var(--ck-text-secondary);
+            cursor: pointer;
+        }
+
+        .ck-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--ck-text-muted);
+        }
+        .ck-dot.live {
+            background-color: var(--ck-down-green);
+            box-shadow: 0 0 8px var(--ck-down-green);
+            animation: ckPulse 1.8s infinite;
+        }
+        .ck-dot.loading { background-color: var(--ck-accent-gold); }
+        .ck-dot.error { background-color: var(--ck-up-red); }
+
+        @keyframes ckPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(0.85); }
+        }
+
+        .ck-sub-header {
+            padding: 10px 16px 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ck-market-tabs {
+            display: flex;
+            gap: 16px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .ck-market-tab {
+            color: var(--ck-text-secondary);
+            cursor: pointer;
+            padding-bottom: 4px;
+            position: relative;
+        }
+
+        .ck-market-tab.active { color: var(--ck-text-primary); }
+        .ck-market-tab.active::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--ck-accent-gold);
+            border-radius: 2px;
+        }
+
+        .ck-last-update {
+            text-align: right;
+            font-size: 11px;
+            color: var(--ck-text-muted);
+            line-height: 1.3;
+        }
+
+        .ck-toolbar {
+            padding: 8px 16px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ck-btn {
+            background-color: var(--ck-bg-card);
+            color: var(--ck-text-primary);
+            border: 1px solid var(--ck-border-color);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.15s;
+        }
+
+        .ck-btn:hover { background-color: var(--ck-bg-elevated); }
+        .ck-btn-primary {
+            background-color: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.45);
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .ck-select-compact {
+            background-color: var(--ck-bg-card);
+            color: var(--ck-text-primary);
+            border: 1px solid var(--ck-border-color);
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .ck-summary-card {
+            margin: 8px 16px;
+            background-color: var(--ck-bg-card);
+            border: 1px solid var(--ck-border-color);
+            border-radius: 12px;
+            padding: 14px 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.1fr;
+            gap: 8px;
+        }
+
+        .ck-summary-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 0 4px;
+        }
+
+        .ck-summary-col:not(:last-child) {
+            border-right: 1px solid var(--ck-border-color);
+        }
+
+        .ck-summary-label {
+            font-size: 12px;
+            color: var(--ck-text-secondary);
+        }
+
+        .ck-summary-value {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .ck-summary-sub {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .ck-chart-card {
+            margin: 4px 16px 10px;
+            background-color: var(--ck-bg-card);
+            border: 1px solid var(--ck-border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .ck-donut-wrap {
+            position: relative;
+            width: 108px;
+            height: 108px;
+            flex-shrink: 0;
+        }
+
+        .ck-donut-ring {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#3b82f6 0% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .ck-donut-hole {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background-color: var(--ck-bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ck-text-primary);
+        }
+
+        .ck-legend-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 112px;
+            overflow-y: auto;
+        }
+
+        .ck-legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .ck-legend-left {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            overflow: hidden;
+        }
+
+        .ck-legend-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .ck-legend-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--ck-text-primary);
+        }
+
+        .ck-legend-pct {
+            font-weight: 600;
+            color: var(--ck-text-secondary);
+            margin-left: 8px;
+        }
+
+        .ck-table-header {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr 0.85fr 1.1fr;
+            padding: 10px 16px;
+            font-size: 12px;
+            color: var(--ck-text-secondary);
+            border-top: 1px solid var(--ck-border-color);
+            border-bottom: 1px solid var(--ck-border-color);
+            background-color: #13161c;
+        }
+
+        .ck-th-right { text-align: right; }
+
+        .ck-holdings-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ck-stock-row {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr 0.85fr 1.1fr;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--ck-border-color);
+            cursor: pointer;
+            transition: background-color 0.25s;
+        }
+
+        .ck-stock-row:hover { background-color: var(--ck-bg-card); }
+        .ck-flash-up { animation: ckFlashRed 0.65s ease-out; }
+        .ck-flash-down { animation: ckFlashGreen 0.65s ease-out; }
+
+        @keyframes ckFlashRed {
+            0% { background-color: var(--ck-up-red-bg); }
+            100% { background-color: transparent; }
+        }
+        @keyframes ckFlashGreen {
+            0% { background-color: var(--ck-down-green-bg); }
+            100% { background-color: transparent; }
+        }
+
+        .ck-stock-name {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+
+        .ck-stock-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--ck-text-secondary);
+        }
+
+        .ck-tag-spot {
+            background-color: #2b303d;
+            color: #d1d5db;
+            font-size: 10px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .ck-cell-right {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .ck-val-main {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .ck-val-sub {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .ck-holding-detail-bar {
+            grid-column: 1 / -1;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #262b36;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--ck-text-muted);
+        }
+
+        .ck-bottom-bar {
+            background-color: #13161c;
+            border-top: 1px solid var(--ck-border-color);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            padding: 10px 0;
+        }
+
+        .ck-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            font-size: 11px;
+            color: var(--ck-text-muted);
+            cursor: pointer;
+        }
+
+        .ck-nav-item.active {
+            color: var(--ck-accent-gold);
+            font-weight: 600;
+        }
+
+        .ck-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.78);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 60;
+        }
+
+        .ck-modal-backdrop.open { display: flex; }
+
+        .ck-modal-box {
+            width: 100%;
+            max-width: 440px;
+            background-color: #181b22;
+            border: 1px solid #2b303d;
+            border-radius: 14px;
+            padding: 18px;
+            color: #f3f4f6;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .ck-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .ck-close-btn {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .ck-form-group { margin-bottom: 12px; }
+        .ck-form-label {
+            display: block;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 5px;
+        }
+
+        .ck-form-input {
+            width: 100%;
+            background-color: #0e1014;
+            border: 1px solid #2b303d;
+            color: #f3f4f6;
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .ck-form-input:focus { border-color: #f59e0b; }
+
+        .ck-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .ck-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .ck-btn-danger {
+            background-color: rgba(240, 68, 68, 0.15);
+            border-color: rgba(240, 68, 68, 0.4);
+            color: #f04444;
+            margin-right: auto;
+        }
+
+        .ck-diag-box {
+            margin-top: 10px;
+            background-color: #0e1014;
+            border: 1px solid #2b303d;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            color: #9ca3af;
+            word-break: break-all;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .ck-toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #262b36;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            border: 1px solid #2b303d;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+            z-index: 70;
+        }
+
+        .ck-toast.show { opacity: 1; }
     </style>
 </head>
 <body class="gradient-bg text-slate-200 min-h-screen p-4 md:p-8 font-sans">
@@ -101,6 +636,7 @@
             <button id="btn-tab-1" class="pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-blue-500 text-blue-400 transition-colors whitespace-nowrap" onclick="switchTab(1)">投資戰略系統</button>
             <button id="btn-tab-2" class="pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap" onclick="switchTab(2)">進階財務指標計算</button>
             <button id="btn-tab-3" class="pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap" onclick="switchTab(3)">猷&玲 總資產管理</button>
+            <button id="btn-tab-4" class="pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap" onclick="switchTab(4)">籌碼K線即時庫存</button>
         </div>
 
         <!-- ======================= -->
@@ -274,7 +810,10 @@
                                     </div>
                                     <div>
                                         <label class="text-[10px] text-amber-500 mb-1 block uppercase font-bold">台股目前市值 (TWD)</label>
-                                        <input type="number" id="input-tw-market" class="input-field font-mono border-amber-500/30 text-amber-400" placeholder="輸入目前市值" oninput="calculate()">
+                                        <div class="flex gap-2">
+                                            <input type="number" id="input-tw-market" class="input-field font-mono border-amber-500/30 text-amber-400" placeholder="輸入目前市值" oninput="calculate()">
+                                            <button type="button" onclick="syncCkTwMarketValue()" class="btn-quick-add !mt-0 whitespace-nowrap px-3 font-semibold !text-amber-400 !border-amber-500/30 !bg-amber-500/10 hover:!bg-amber-500/20" title="一鍵帶入籌碼K線中最新台股庫存總市值">帶入庫存市值</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden mt-2">
@@ -533,6 +1072,115 @@
                 </div>
             </div>
         </div>
+
+        <!-- ======================= -->
+        <!-- 第四分頁：籌碼K線即時庫存損益看板 -->
+        <!-- ======================= -->
+        <div id="pane-4" class="hidden pb-8">
+            <div class="ck-shell">
+                <!-- Top Header -->
+                <div class="ck-top-bar">
+                    <div class="ck-brand">
+                        <span class="ck-brand-badge">K</span>
+                        <span>籌碼K線｜庫存損益</span>
+                    </div>
+                    <div class="ck-status-pill" id="ck-statusPill" onclick="ckManualRefresh()" title="點擊立即更新報價">
+                        <span class="ck-dot" id="ck-statusDot"></span>
+                        <span id="ck-statusText">準備連線</span>
+                    </div>
+                </div>
+
+                <!-- Market Tabs & Timestamp -->
+                <div class="ck-sub-header">
+                    <div class="ck-market-tabs" id="ck-marketTabs">
+                        <div class="ck-market-tab" data-filter="ALL" onclick="ckSetMarketFilter('ALL')">資產</div>
+                        <div class="ck-market-tab active" data-filter="TW" onclick="ckSetMarketFilter('TW')">台股</div>
+                        <div class="ck-market-tab" data-filter="US" onclick="ckSetMarketFilter('US')">美股</div>
+                    </div>
+                    <div class="ck-last-update">
+                        <div>上次更新</div>
+                        <div class="ck-num" id="ck-lastUpdateText">--/-- --:--:--</div>
+                    </div>
+                </div>
+
+                <!-- Toolbar -->
+                <div class="ck-toolbar">
+                    <button class="ck-btn ck-btn-primary" onclick="ckOpenStockModal()">＋ 新增持股</button>
+                    <button class="ck-btn" onclick="ckManualRefresh()">↻ 立即刷新</button>
+                    <select class="ck-select-compact" id="ck-modeSelect" onchange="ckChangeMode(this.value)">
+                        <option value="live" selected>真實報價 (GAS)</option>
+                        <option value="sim">模擬跳動 (測試)</option>
+                        <option value="pause">暫停更新</option>
+                    </select>
+                    <select class="ck-select-compact" id="ck-intervalSelect" onchange="ckChangeInterval(this.value)">
+                        <option value="5000">5秒</option>
+                        <option value="10000" selected>10秒</option>
+                        <option value="30000">30秒</option>
+                    </select>
+                    <button class="ck-btn" onclick="ckOpenGasModal()">⚙ 報價源設定</button>
+                </div>
+
+                <!-- Summary Card -->
+                <div class="ck-summary-card">
+                    <div class="ck-summary-col">
+                        <div class="ck-summary-label">今日損益</div>
+                        <div class="ck-summary-value ck-num" id="ck-totalTodayPnl">0</div>
+                        <div class="ck-summary-sub ck-num" id="ck-totalTodayPct">0.00%</div>
+                    </div>
+                    <div class="ck-summary-col">
+                        <div class="ck-summary-label">累積損益</div>
+                        <div class="ck-summary-value ck-num" id="ck-totalAccPnl">0</div>
+                        <div class="ck-summary-sub ck-num" id="ck-totalAccPct">0.00%</div>
+                    </div>
+                    <div class="ck-summary-col">
+                        <div class="ck-summary-label">股票市值</div>
+                        <div class="ck-summary-value ck-num" id="ck-totalMarketValue">0</div>
+                        <div class="ck-summary-sub ck-num" style="color: var(--ck-text-secondary);" id="ck-totalCostValue">成本 0</div>
+                    </div>
+                </div>
+
+                <!-- Donut Chart Card -->
+                <div class="ck-chart-card">
+                    <div class="ck-donut-wrap">
+                        <div class="ck-donut-ring" id="ck-donutRing">
+                            <div class="ck-donut-hole">持股佔比</div>
+                        </div>
+                    </div>
+                    <div class="ck-legend-list" id="ck-legendList"></div>
+                </div>
+
+                <!-- Table Header -->
+                <div class="ck-table-header">
+                    <div>庫存股 (點擊編輯)</div>
+                    <div class="ck-th-right">今日損益</div>
+                    <div class="ck-th-right">股價 / 漲跌幅</div>
+                    <div class="ck-th-right">總損益 / 報酬率</div>
+                </div>
+
+                <!-- Holdings List -->
+                <div class="ck-holdings-list" id="ck-holdingsList"></div>
+
+                <!-- Bottom Bar -->
+                <div class="ck-bottom-bar">
+                    <div class="ck-nav-item active" onclick="ckShowToast('目前位於即時庫存損益頁')">
+                        <span>💰</span><span>庫存股</span>
+                    </div>
+                    <div class="ck-nav-item" onclick="ckOpenStockModal()">
+                        <span>➕</span><span>新增標的</span>
+                    </div>
+                    <div class="ck-nav-item" onclick="ckExportBackup()">
+                        <span>📤</span><span>匯出備份</span>
+                    </div>
+                    <div class="ck-nav-item" onclick="ckTriggerImport()">
+                        <span>📥</span><span>匯入備份</span>
+                    </div>
+                    <div class="ck-nav-item" onclick="ckResetDefaultHoldings()">
+                        <span>🔄</span><span>重置範例</span>
+                    </div>
+                </div>
+                <input type="file" id="ck-importFileInput" accept=".json" style="display:none" onchange="ckHandleImportFile(event)" />
+            </div>
+        </div>
     </div>
 
     <!-- 智慧匯入 Modal (暗黑風格) -->
@@ -547,6 +1195,82 @@
             </div>
         </div>
     </div>
+
+    <!-- 第四分頁：新增 / 編輯持股 Modal -->
+    <div class="ck-modal-backdrop" id="ck-stockModal">
+        <div class="ck-modal-box">
+            <div class="ck-modal-header">
+                <span id="ck-stockModalTitle">新增 / 編輯持股</span>
+                <button class="ck-close-btn" onclick="ckCloseModal('ck-stockModal')">&times;</button>
+            </div>
+            <form id="ck-stockForm" onsubmit="ckSaveStock(event)">
+                <input type="hidden" id="ck-editIndex" value="-1" />
+                <div class="ck-form-row">
+                    <div class="ck-form-group">
+                        <label class="ck-form-label">股票代號 (如 00685L, 2330, NVDA)</label>
+                        <input type="text" class="ck-form-input" id="ck-fieldCode" required placeholder="00685L" />
+                    </div>
+                    <div class="ck-form-group">
+                        <label class="ck-form-label">市場別</label>
+                        <select class="ck-form-input" id="ck-fieldMarket">
+                            <option value="TW">台股 (TW)</option>
+                            <option value="US">美股 (US)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="ck-form-group">
+                    <label class="ck-form-label">股票名稱</label>
+                    <input type="text" class="ck-form-input" id="ck-fieldName" required placeholder="群益臺灣加權正2" />
+                </div>
+                <div class="ck-form-row">
+                    <div class="ck-form-group">
+                        <label class="ck-form-label">持有股數 (1張 = 1000股)</label>
+                        <input type="number" step="any" class="ck-form-input" id="ck-fieldShares" required placeholder="620000" />
+                    </div>
+                    <div class="ck-form-group">
+                        <label class="ck-form-label">平均成本價</label>
+                        <input type="number" step="any" class="ck-form-input" id="ck-fieldCost" required placeholder="10.22868" />
+                    </div>
+                </div>
+                <div class="ck-form-row">
+                    <div class="ck-form-group">
+                        <label class="ck-form-label">目前現價</label>
+                        <input type="number" step="any" class="ck-form-input" id="ck-fieldPrice" required placeholder="7.98" />
+                    </div>
+                    <div class="ck-form-group">
+                        <label class="ck-form-label">昨日收盤價</label>
+                        <input type="number" step="any" class="ck-form-input" id="ck-fieldPrevClose" required placeholder="7.62" />
+                    </div>
+                </div>
+                <div class="ck-modal-actions">
+                    <button type="button" class="ck-btn ck-btn-danger" id="ck-deleteStockBtn" style="display:none" onclick="ckDeleteStock()">刪除持股</button>
+                    <button type="button" class="ck-btn" onclick="ckCloseModal('ck-stockModal')">取消</button>
+                    <button type="submit" class="ck-btn ck-btn-primary">儲存持股</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 第四分頁：GAS 報價源設定 Modal -->
+    <div class="ck-modal-backdrop" id="ck-gasModal">
+        <div class="ck-modal-box">
+            <div class="ck-modal-header">
+                <span>Google Apps Script 報價源設定</span>
+                <button class="ck-close-btn" onclick="ckCloseModal('ck-gasModal')">&times;</button>
+            </div>
+            <div class="ck-form-group">
+                <label class="ck-form-label">GAS 網頁應用程式網址 (/exec)</label>
+                <input type="url" class="ck-form-input" id="ck-gasUrlInput" />
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="ck-btn ck-btn-primary" onclick="ckSaveGasUrl()">儲存網址</button>
+                <button type="button" class="ck-btn" onclick="ckTestGasConnection()">測試連線並檢視回傳</button>
+            </div>
+            <div class="ck-diag-box" id="ck-gasDiagOutput">點擊「測試連線並檢視回傳」可檢查您的 GAS API 回應內容。</div>
+        </div>
+    </div>
+
+    <div class="ck-toast" id="ck-toast"></div>
 
 
     <!-- ======================= -->
@@ -615,6 +1339,21 @@
         }
 
         function quickAdd(id, amount) { const input = document.getElementById(id); input.value = (parseFloat(input.value) || 0) + amount; calculate(); }
+
+        function syncCkTwMarketValue() {
+            if (typeof ckHoldings === 'undefined' || !Array.isArray(ckHoldings)) {
+                ckShowToast('尚未載入籌碼K線庫存資料');
+                return;
+            }
+            const twTotalMv = ckHoldings
+                .filter(item => item.market === 'TW')
+                .reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.shares) || 0)), 0);
+
+            const roundedMv = Math.round(twTotalMv);
+            document.getElementById('input-tw-market').value = roundedMv;
+            calculate();
+            ckShowToast(`已帶入最新台股庫存市值：${roundedMv.toLocaleString()} TWD`);
+        }
 
         function addRow(type, name = '', amount = '') {
             const container = document.getElementById(type === 'bank' ? 'bank-list' : 'expense-list');
@@ -1200,12 +1939,536 @@
 
 
     <!-- ======================= -->
+    <!-- 第 4 分頁：籌碼K線即時庫存專屬腳本區 -->
+    <!-- ======================= -->
+    <script>
+        const CK_STORAGE_KEY = 'tw_stock_portfolio_v3';
+        const CK_GAS_URL_KEY = 'tw_stock_gas_url_v3';
+        const CK_DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz3Pe-RuAB9agJ1mZBJM1pzS68ZOcCLaV3od6aXKqzlm-JxZWDKApu7im6lYil4FJgTeg/exec';
+
+        const CK_CHART_COLORS = [
+            '#2596be', '#f59e0b', '#10b981', '#ef4444',
+            '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
+        ];
+
+        const CK_DEFAULT_HOLDINGS = [
+            {
+                code: '00685L',
+                name: '群益臺灣加權正2',
+                market: 'TW',
+                shares: 620000,
+                avgCost: 10.22868,
+                price: 7.98,
+                prevClose: 7.62
+            },
+            {
+                code: '0050',
+                name: '元大台灣50',
+                market: 'TW',
+                shares: 11000,
+                avgCost: 75.90,
+                price: 91.50,
+                prevClose: 90.30
+            }
+        ];
+
+        let ckHoldings = [];
+        let ckCurrentFilter = 'TW';
+        let ckCurrentMode = 'live';
+        let ckPollIntervalMs = 10000;
+        let ckTimerId = null;
+        let ckIsFetching = false;
+
+        function ckLoadHoldings() {
+            try {
+                const raw = localStorage.getItem(CK_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        ckHoldings = parsed;
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('讀取本地儲存失敗，載入預設庫存', e);
+            }
+            ckHoldings = JSON.parse(JSON.stringify(CK_DEFAULT_HOLDINGS));
+            ckSaveHoldings();
+        }
+
+        function ckSaveHoldings() {
+            localStorage.setItem(CK_STORAGE_KEY, JSON.stringify(ckHoldings));
+        }
+
+        function ckGetGasUrl() {
+            return localStorage.getItem(CK_GAS_URL_KEY) || CK_DEFAULT_GAS_URL;
+        }
+
+        function ckSetStatus(state, text) {
+            const dot = document.getElementById('ck-statusDot');
+            const label = document.getElementById('ck-statusText');
+            if (dot) dot.className = 'ck-dot ' + state;
+            if (label) label.textContent = text;
+        }
+
+        function ckUpdateTimestamp() {
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const str = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            const el = document.getElementById('ck-lastUpdateText');
+            if (el) el.textContent = str;
+        }
+
+        function ckFormatSignedInt(num) {
+            const rounded = Math.round(num);
+            const absStr = Math.abs(rounded).toLocaleString('en-US');
+            if (rounded > 0) return '+' + absStr;
+            if (rounded < 0) return '-' + absStr;
+            return '0';
+        }
+
+        function ckFormatSignedPct(pct) {
+            if (!isFinite(pct) || Math.abs(pct) < 0.0001) return '0.00%';
+            const absStr = Math.abs(pct).toFixed(2) + '%';
+            return pct > 0 ? '+' + absStr : '-' + absStr;
+        }
+
+        function ckGetColorClass(val) {
+            if (val > 0.0001) return 'ck-color-up';
+            if (val < -0.0001) return 'ck-color-down';
+            return 'ck-color-flat';
+        }
+
+        function ckGetTickSize(price) {
+            if (price < 10) return 0.01;
+            if (price < 50) return 0.05;
+            if (price < 100) return 0.1;
+            if (price < 500) return 0.5;
+            if (price < 1000) return 1;
+            return 5;
+        }
+
+        function ckRenderAll(flashMap = {}) {
+            const visible = ckHoldings.filter(item => ckCurrentFilter === 'ALL' || item.market === ckCurrentFilter);
+
+            let totalMarketVal = 0;
+            let totalCostVal = 0;
+            let totalTodayPnl = 0;
+            let totalPrevMarketVal = 0;
+
+            visible.forEach(item => {
+                const mv = item.price * item.shares;
+                const cost = item.avgCost * item.shares;
+                const prevMv = item.prevClose * item.shares;
+                totalMarketVal += mv;
+                totalCostVal += cost;
+                totalTodayPnl += (item.price - item.prevClose) * item.shares;
+                totalPrevMarketVal += prevMv;
+            });
+
+            const totalAccPnl = totalMarketVal - totalCostVal;
+            const totalTodayPct = totalPrevMarketVal > 0 ? (totalTodayPnl / totalPrevMarketVal) * 100 : 0;
+            const totalAccPct = totalCostVal > 0 ? (totalAccPnl / totalCostVal) * 100 : 0;
+
+            const elTodayPnl = document.getElementById('ck-totalTodayPnl');
+            const elTodayPct = document.getElementById('ck-totalTodayPct');
+            elTodayPnl.textContent = ckFormatSignedInt(totalTodayPnl);
+            elTodayPct.textContent = ckFormatSignedPct(totalTodayPct);
+            elTodayPnl.className = 'ck-summary-value ck-num ' + ckGetColorClass(totalTodayPnl);
+            elTodayPct.className = 'ck-summary-sub ck-num ' + ckGetColorClass(totalTodayPnl);
+
+            const elAccPnl = document.getElementById('ck-totalAccPnl');
+            const elAccPct = document.getElementById('ck-totalAccPct');
+            elAccPnl.textContent = ckFormatSignedInt(totalAccPnl);
+            elAccPct.textContent = ckFormatSignedPct(totalAccPct);
+            elAccPnl.className = 'ck-summary-value ck-num ' + ckGetColorClass(totalAccPnl);
+            elAccPct.className = 'ck-summary-sub ck-num ' + ckGetColorClass(totalAccPnl);
+
+            document.getElementById('ck-totalMarketValue').textContent = Math.round(totalMarketVal).toLocaleString('en-US');
+            document.getElementById('ck-totalCostValue').textContent = '成本 ' + Math.round(totalCostVal).toLocaleString('en-US');
+
+            // Donut Chart & Legends
+            const legendList = document.getElementById('ck-legendList');
+            const donutRing = document.getElementById('ck-donutRing');
+            legendList.innerHTML = '';
+
+            if (visible.length === 0 || totalMarketVal <= 0) {
+                donutRing.style.background = '#2b303d';
+                legendList.innerHTML = '<div style="font-size:12px;color:var(--ck-text-muted)">尚無符合條件的持股</div>';
+            } else {
+                const sortedForChart = [...visible].sort((a, b) => (b.price * b.shares) - (a.price * a.shares));
+                let accPct = 0;
+                const stops = [];
+
+                sortedForChart.forEach((item, idx) => {
+                    const mv = item.price * item.shares;
+                    const pct = (mv / totalMarketVal) * 100;
+                    const color = CK_CHART_COLORS[idx % CK_CHART_COLORS.length];
+                    const start = accPct;
+                    accPct += pct;
+                    stops.push(`${color} ${start.toFixed(2)}% ${accPct.toFixed(2)}%`);
+
+                    const row = document.createElement('div');
+                    row.className = 'ck-legend-item';
+                    row.innerHTML = `
+                        <div class="ck-legend-left">
+                            <span class="ck-legend-dot" style="background:${color}"></span>
+                            <span class="ck-legend-name">${item.name}</span>
+                        </div>
+                        <span class="ck-legend-pct ck-num">${Math.round(pct)}%</span>
+                    `;
+                    legendList.appendChild(row);
+                });
+                donutRing.style.background = `conic-gradient(${stops.join(', ')})`;
+            }
+
+            // Stock Rows
+            const listEl = document.getElementById('ck-holdingsList');
+            listEl.innerHTML = '';
+
+            if (visible.length === 0) {
+                listEl.innerHTML = `
+                    <div style="padding:36px 16px; text-align:center; color:var(--ck-text-secondary); font-size:13px;">
+                        目前此分類沒有持股，點擊上方「＋ 新增持股」開始建立。
+                    </div>
+                `;
+                return;
+            }
+
+            visible.forEach(item => {
+                const realIndex = ckHoldings.indexOf(item);
+                const todayPnl = (item.price - item.prevClose) * item.shares;
+                const dayChangePct = item.prevClose > 0 ? ((item.price - item.prevClose) / item.prevClose) * 100 : 0;
+                const totalPnl = (item.price - item.avgCost) * item.shares;
+                const totalRoi = item.avgCost > 0 ? ((item.price - item.avgCost) / item.avgCost) * 100 : 0;
+                const lots = (item.shares / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 });
+
+                const dayColor = ckGetColorClass(todayPnl);
+                const totalColor = ckGetColorClass(totalPnl);
+                const priceDecimals = item.price < 50 ? 2 : (item.price < 500 ? 2 : 1);
+
+                const row = document.createElement('div');
+                row.className = 'ck-stock-row';
+                if (flashMap[item.code] === 'up') row.classList.add('ck-flash-up');
+                if (flashMap[item.code] === 'down') row.classList.add('ck-flash-down');
+                row.onclick = () => ckOpenStockModal(realIndex);
+
+                row.innerHTML = `
+                    <div>
+                        <div class="ck-stock-name">${item.name}</div>
+                        <div class="ck-stock-meta">
+                            <span class="ck-tag-spot">${item.market === 'US' ? '美' : '現'}</span>
+                            <span class="ck-num">${item.code}</span>
+                        </div>
+                    </div>
+                    <div class="ck-cell-right">
+                        <div class="ck-val-main ck-num ${dayColor}">${ckFormatSignedInt(todayPnl)}</div>
+                    </div>
+                    <div class="ck-cell-right">
+                        <div class="ck-val-main ck-num ${dayColor}">${item.price.toFixed(priceDecimals)}</div>
+                        <div class="ck-val-sub ck-num ${dayColor}">${Math.abs(dayChangePct).toFixed(2)}%</div>
+                    </div>
+                    <div class="ck-cell-right">
+                        <div class="ck-val-main ck-num ${totalColor}">${ckFormatSignedInt(totalPnl)}</div>
+                        <div class="ck-val-sub ck-num ${totalColor}">${ckFormatSignedPct(totalRoi)}</div>
+                    </div>
+                    <div class="ck-holding-detail-bar ck-num">
+                        <span>庫存：${item.shares.toLocaleString('en-US')} 股 (${lots} 張)</span>
+                        <span>均價：${item.avgCost} ｜ 昨收：${item.prevClose}</span>
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        async function ckFetchLiveQuotes() {
+            if (ckIsFetching || ckCurrentMode !== 'live') return;
+            ckIsFetching = true;
+            ckSetStatus('loading', '更新報價中...');
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+            try {
+                const url = ckGetGasUrl();
+                const res = await fetch(url, {
+                    method: 'GET',
+                    redirect: 'follow',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                let updatedCount = 0;
+                const flashMap = {};
+
+                ckHoldings.forEach(item => {
+                    const cleanCode = item.code.replace(/^TPE:/i, '').trim().toUpperCase();
+                    const quote = data[cleanCode] || data[item.code];
+                    if (quote && typeof quote.price === 'number' && !isNaN(quote.price) && quote.price > 0) {
+                        if (quote.price > item.price) flashMap[item.code] = 'up';
+                        else if (quote.price < item.price) flashMap[item.code] = 'down';
+
+                        item.price = quote.price;
+                        if (typeof quote.prevClose === 'number' && !isNaN(quote.prevClose) && quote.prevClose > 0) {
+                            item.prevClose = quote.prevClose;
+                        }
+                        updatedCount++;
+                    }
+                });
+
+                ckSaveHoldings();
+                ckUpdateTimestamp();
+                ckRenderAll(flashMap);
+
+                if (updatedCount > 0) {
+                    ckSetStatus('live', `GAS 連線中 (${updatedCount}檔)`);
+                } else {
+                    ckSetStatus('error', 'GAS 無符合代號');
+                }
+            } catch (err) {
+                clearTimeout(timeoutId);
+                console.error('GAS 報價更新失敗:', err);
+                ckSetStatus('error', err.name === 'AbortError' ? '連線逾時' : '連線受阻');
+            } finally {
+                ckIsFetching = false;
+            }
+        }
+
+        function ckSimulateTick() {
+            if (ckCurrentMode !== 'sim') return;
+            const flashMap = {};
+
+            ckHoldings.forEach(item => {
+                const tick = ckGetTickSize(item.price);
+                const dir = Math.random() < 0.52 ? 1 : -1;
+                const steps = Math.floor(Math.random() * 2) + 1;
+                const nextPrice = Math.max(tick, Number((item.price + dir * steps * tick).toFixed(4)));
+
+                if (nextPrice > item.price) flashMap[item.code] = 'up';
+                else if (nextPrice < item.price) flashMap[item.code] = 'down';
+
+                item.price = nextPrice;
+            });
+
+            ckSaveHoldings();
+            ckUpdateTimestamp();
+            ckRenderAll(flashMap);
+            ckSetStatus('live', '模擬盤中跳動');
+        }
+
+        function ckStartLoop() {
+            if (ckTimerId) clearInterval(ckTimerId);
+            if (ckCurrentMode === 'pause') {
+                ckSetStatus('', '已暫停更新');
+                return;
+            }
+            if (ckCurrentMode === 'live') {
+                ckFetchLiveQuotes();
+                ckTimerId = setInterval(ckFetchLiveQuotes, ckPollIntervalMs);
+            } else if (ckCurrentMode === 'sim') {
+                ckSimulateTick();
+                ckTimerId = setInterval(ckSimulateTick, 2000);
+            }
+        }
+
+        function ckManualRefresh() {
+            if (ckCurrentMode === 'sim') {
+                ckSimulateTick();
+                ckShowToast('已觸發模擬跳動');
+            } else {
+                ckCurrentMode = 'live';
+                document.getElementById('ck-modeSelect').value = 'live';
+                ckFetchLiveQuotes();
+            }
+        }
+
+        function ckChangeMode(mode) {
+            ckCurrentMode = mode;
+            ckStartLoop();
+        }
+
+        function ckChangeInterval(ms) {
+            ckPollIntervalMs = Number(ms);
+            if (ckCurrentMode === 'live') ckStartLoop();
+        }
+
+        function ckSetMarketFilter(filter) {
+            ckCurrentFilter = filter;
+            document.querySelectorAll('#ck-marketTabs .ck-market-tab').forEach(el => {
+                el.classList.toggle('active', el.dataset.filter === filter);
+            });
+            ckRenderAll();
+        }
+
+        function ckOpenStockModal(index = -1) {
+            document.getElementById('ck-editIndex').value = index;
+            const delBtn = document.getElementById('ck-deleteStockBtn');
+
+            if (index >= 0 && ckHoldings[index]) {
+                const item = ckHoldings[index];
+                document.getElementById('ck-stockModalTitle').textContent = '編輯持股明細';
+                document.getElementById('ck-fieldCode').value = item.code;
+                document.getElementById('ck-fieldMarket').value = item.market || 'TW';
+                document.getElementById('ck-fieldName').value = item.name;
+                document.getElementById('ck-fieldShares').value = item.shares;
+                document.getElementById('ck-fieldCost').value = item.avgCost;
+                document.getElementById('ck-fieldPrice').value = item.price;
+                document.getElementById('ck-fieldPrevClose').value = item.prevClose;
+                delBtn.style.display = 'inline-flex';
+            } else {
+                document.getElementById('ck-stockModalTitle').textContent = '新增庫存持股';
+                document.getElementById('ck-stockForm').reset();
+                document.getElementById('ck-fieldMarket').value = 'TW';
+                delBtn.style.display = 'none';
+            }
+            document.getElementById('ck-stockModal').classList.add('open');
+        }
+
+        function ckCloseModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        function ckSaveStock(e) {
+            e.preventDefault();
+            const idx = Number(document.getElementById('ck-editIndex').value);
+            const record = {
+                code: document.getElementById('ck-fieldCode').value.trim().toUpperCase(),
+                market: document.getElementById('ck-fieldMarket').value,
+                name: document.getElementById('ck-fieldName').value.trim(),
+                shares: Number(document.getElementById('ck-fieldShares').value),
+                avgCost: Number(document.getElementById('ck-fieldCost').value),
+                price: Number(document.getElementById('ck-fieldPrice').value),
+                prevClose: Number(document.getElementById('ck-fieldPrevClose').value)
+            };
+
+            if (idx >= 0) {
+                ckHoldings[idx] = record;
+                ckShowToast('已更新持股資料');
+            } else {
+                ckHoldings.push(record);
+                ckShowToast('已新增持股');
+            }
+            ckSaveHoldings();
+            ckRenderAll();
+            ckCloseModal('ck-stockModal');
+            if (ckCurrentMode === 'live') ckFetchLiveQuotes();
+        }
+
+        function ckDeleteStock() {
+            const idx = Number(document.getElementById('ck-editIndex').value);
+            if (idx >= 0 && confirm(`確定要刪除「${ckHoldings[idx].name}」嗎？`)) {
+                ckHoldings.splice(idx, 1);
+                ckSaveHoldings();
+                ckRenderAll();
+                ckCloseModal('ck-stockModal');
+                ckShowToast('已刪除該筆持股');
+            }
+        }
+
+        function ckOpenGasModal() {
+            document.getElementById('ck-gasUrlInput').value = ckGetGasUrl();
+            document.getElementById('ck-gasModal').classList.add('open');
+        }
+
+        function ckSaveGasUrl() {
+            const val = document.getElementById('ck-gasUrlInput').value.trim();
+            if (!val.startsWith('https://')) {
+                ckShowToast('請輸入有效的 https:// 網址');
+                return;
+            }
+            localStorage.setItem(CK_GAS_URL_KEY, val);
+            ckShowToast('已儲存 GAS 報價網址');
+            ckFetchLiveQuotes();
+        }
+
+        async function ckTestGasConnection() {
+            const out = document.getElementById('ck-gasDiagOutput');
+            const url = document.getElementById('ck-gasUrlInput').value.trim();
+            out.textContent = '正在連線測試中...';
+            try {
+                const res = await fetch(url, { redirect: 'follow' });
+                const text = await res.text();
+                out.textContent = `HTTP 狀態：${res.status}\n回傳內容：\n${text}`;
+            } catch (err) {
+                out.textContent = `連線失敗：${err.message}`;
+            }
+        }
+
+        function ckExportBackup() {
+            const blob = new Blob([JSON.stringify(ckHoldings, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `stock-portfolio-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            ckShowToast('已匯出庫存 JSON 備份');
+        }
+
+        function ckTriggerImport() {
+            document.getElementById('ck-importFileInput').click();
+        }
+
+        function ckHandleImportFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (Array.isArray(data) && data.length > 0) {
+                        ckHoldings = data;
+                        ckSaveHoldings();
+                        ckRenderAll();
+                        ckShowToast('匯入成功！');
+                    } else {
+                        ckShowToast('檔案格式不符');
+                    }
+                } catch {
+                    ckShowToast('JSON 解析失敗');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function ckResetDefaultHoldings() {
+            if (confirm('確定要重置為初始範例庫存（00685L 與 0050）嗎？')) {
+                ckHoldings = JSON.parse(JSON.stringify(CK_DEFAULT_HOLDINGS));
+                ckSaveHoldings();
+                ckRenderAll();
+                ckShowToast('已恢復初始庫存');
+                if (ckCurrentMode === 'live') ckFetchLiveQuotes();
+            }
+        }
+
+        function ckShowToast(msg) {
+            const el = document.getElementById('ck-toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2200);
+        }
+    </script>
+
+
+    <!-- ======================= -->
     <!-- 跨分頁管理系統 -->
     <!-- ======================= -->
     <script>
         function switchTab(tabIndex) {
-            const panes = [document.getElementById('pane-1'), document.getElementById('pane-2'), document.getElementById('pane-3')];
-            const btns = [document.getElementById('btn-tab-1'), document.getElementById('btn-tab-2'), document.getElementById('btn-tab-3')];
+            const panes = [
+                document.getElementById('pane-1'),
+                document.getElementById('pane-2'),
+                document.getElementById('pane-3'),
+                document.getElementById('pane-4')
+            ];
+            const btns = [
+                document.getElementById('btn-tab-1'),
+                document.getElementById('btn-tab-2'),
+                document.getElementById('btn-tab-3'),
+                document.getElementById('btn-tab-4')
+            ];
 
             panes.forEach((pane, idx) => {
                 if (idx + 1 === tabIndex) pane.classList.remove('hidden');
@@ -1218,6 +2481,7 @@
                     if(tabIndex === 1) btn.classList.add('border-blue-500', 'text-blue-400');
                     if(tabIndex === 2) btn.classList.add('border-emerald-500', 'text-emerald-400');
                     if(tabIndex === 3) btn.classList.add('border-purple-500', 'text-purple-400');
+                    if(tabIndex === 4) btn.classList.add('border-amber-500', 'text-amber-400');
                 } else {
                     btn.className = "pb-3 text-sm font-bold tracking-widest uppercase border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap";
                 }
@@ -1236,6 +2500,10 @@
                 ylLoadData();
                 isYlInitialized = true;
             }
+
+            if (tabIndex === 4) {
+                ckRenderAll();
+            }
         }
 
         // 整體初始掛載
@@ -1244,6 +2512,11 @@
             loadData(); 
             initSortable();
             calcMetrics();
+
+            // 初始化第四分頁籌碼K線即時庫存
+            ckLoadHoldings();
+            ckRenderAll();
+            ckStartLoop();
             
             // 延遲執行一次以確保第三分頁 DOM 載入後能順利同步負債
             setTimeout(() => {
